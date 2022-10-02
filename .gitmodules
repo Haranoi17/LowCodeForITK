@@ -1,5 +1,5 @@
 [submodule "QuickQanava"]
-	path = externals/QuickQanva
+	path = externals/QuickQanava
 	url = git@github.com:cneben/QuickQanava.git
 [submodule "ITK"]
 	path = externals/ITK

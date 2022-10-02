@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>mockTest.qml</file>
+        <file>mockTest.png</file>
+    </qresource>
+</RCC>
