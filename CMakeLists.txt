@@ -25,6 +25,11 @@ set(QuickQanava_INCLUDE_DIRS
 set(QuickQanava_LIBRARY_DIRS ${QuickQanava_DIR}/lib)
 #---------------------------------------------------------------------------
 
+#ITK------------------------------------------------------------------------
+#You have to install ITK first in your system
+find_package(ITK REQUIRED)
+#---------------------------------------------------------------------------
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SourcesLowCodeForITK)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Tests)
 

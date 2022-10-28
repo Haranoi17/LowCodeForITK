@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>playground.qml</file>
+    </qresource>
+</RCC>
