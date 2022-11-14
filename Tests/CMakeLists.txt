@@ -1,5 +1,1 @@
-add_subdirectory(mockTest)
 
-add_subdirectory(ITKPlayground)
-
-add_subdirectory(QuickQanavaPlayground)
