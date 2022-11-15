@@ -7,11 +7,10 @@
 class Identifiable
 {
 public:
-	Identifiable(std::shared_ptr<UniqueIDProvider> idPorvider);
-
+	Identifiable() = default;
 	virtual ~Identifiable();
 
+	virtual void setIdProvider(std::shared_ptr<UniqueIDProvider> idProvider);
 protected:
 	std::shared_ptr<UniqueIDProvider> m_idProvider;
-	std::vector <IDType> m_ids;
 };

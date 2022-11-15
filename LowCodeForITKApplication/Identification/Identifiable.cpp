@@ -1,9 +1,14 @@
 #include "Identifiable.hpp"
 #include <algorithm>
 
-Identifiable::Identifiable(std::shared_ptr<UniqueIDProvider> idPorvider) : m_idProvider{ idPorvider } {}
+//Identifiable::Identifiable(std::shared_ptr<UniqueIDProvider> idPorvider) : m_idProvider{ idPorvider } {}
 
-inline Identifiable::~Identifiable()
+void Identifiable::setIdProvider(std::shared_ptr<UniqueIDProvider> idProvider)
 {
-	std::ranges::for_each(m_ids, [&](IDType id) {m_idProvider->freeID(id);});
+	m_idProvider = idProvider;
+}
+
+Identifiable::~Identifiable()
+{
+	//std::ranges::for_each(m_ids, [&](IDType id) {m_idProvider->freeID(id);});
 }
