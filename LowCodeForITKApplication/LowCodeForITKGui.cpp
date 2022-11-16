@@ -15,38 +15,12 @@ ImRect ImRect_Expanded(const ImRect& rect, float x, float y)
 	return result;
 }
 
-bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
-{
-	using namespace ImGui;
-	ImGuiContext& g = *GImGui;
-	ImGuiWindow* window = g.CurrentWindow;
-	ImGuiID id = window->GetID("##Splitter");
-	ImRect bb;
-	bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
-	bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
-	return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
-}
-
 Link::Link(ed::LinkId id, ed::PinId startPinId, ed::PinId endPinId) :
 	ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255)
 {
 }
 
-void BlueprintsBaseApp::TouchNode(ed::NodeId id)
-{
-	m_NodeTouchTime[id] = m_TouchTime;
-}
-
-float BlueprintsBaseApp::GetTouchProgress(ed::NodeId id)
-{
-	auto it = m_NodeTouchTime.find(id);
-	if (it != m_NodeTouchTime.end() && it->second > 0.0f)
-		return (m_TouchTime - it->second) / m_TouchTime;
-	else
-		return 0.0f;
-}
-
-Node* BlueprintsBaseApp::FindNode(ed::NodeId id)
+Node* FindNode(ed::NodeId id)
 {
 	for (auto& node : m_Nodes)
 		if (node->ID == id)
@@ -55,7 +29,7 @@ Node* BlueprintsBaseApp::FindNode(ed::NodeId id)
 	return nullptr;
 }
 
-Link* BlueprintsBaseApp::FindLink(ed::LinkId id)
+Link* FindLink(ed::LinkId id)
 {
 	for (auto& link : m_Links)
 		if (link.ID == id)
@@ -64,7 +38,7 @@ Link* BlueprintsBaseApp::FindLink(ed::LinkId id)
 	return nullptr;
 }
 
-Pin* BlueprintsBaseApp::FindPin(ed::PinId id)
+Pin* FindPin(ed::PinId id)
 {
 	if (!id)
 		return nullptr;
@@ -83,7 +57,7 @@ Pin* BlueprintsBaseApp::FindPin(ed::PinId id)
 	return nullptr;
 }
 
-bool BlueprintsBaseApp::IsPinLinked(ed::PinId id)
+bool IsPinLinked(ed::PinId id)
 {
 	if (!id)
 		return false;
@@ -95,7 +69,7 @@ bool BlueprintsBaseApp::IsPinLinked(ed::PinId id)
 	return false;
 }
 
-bool BlueprintsBaseApp::CanCreateLink(Pin* a, Pin* b)
+bool CanCreateLink(Pin* a, Pin* b)
 {
 	if (!a || !b || a == b || a->Kind == b->Kind || a->Type != b->Type || a->Node == b->Node)
 		return false;
@@ -115,7 +89,7 @@ void BlueprintsBaseApp::OnStart()
 	{
 		auto self = static_cast<BlueprintsBaseApp*>(userPointer);
 
-		auto node = self->FindNode(nodeId);
+		auto node = FindNode(nodeId);
 		if (!node)
 			return 0;
 
@@ -128,13 +102,12 @@ void BlueprintsBaseApp::OnStart()
 	{
 		auto self = static_cast<BlueprintsBaseApp*>(userPointer);
 
-		auto node = self->FindNode(nodeId);
+		auto node = FindNode(nodeId);
 		if (!node)
 			return false;
 
 		node->State.assign(data, size);
 
-		self->TouchNode(nodeId);
 
 		return true;
 	};
@@ -169,7 +142,6 @@ void BlueprintsBaseApp::OnStart()
 
 	m_HeaderBackground = LoadTexture("data/BlueprintBackground.png");
 	m_SaveIcon = LoadTexture("data/ic_save_white_24dp.png");
-	m_RestoreIcon = LoadTexture("data/ic_restore_white_24dp.png");
 }
 
 void BlueprintsBaseApp::OnStop()
@@ -194,7 +166,7 @@ void BlueprintsBaseApp::OnStop()
 	}
 }
 
-ImColor BlueprintsBaseApp::GetIconColor(PinType type)
+ImColor GetIconColor(PinType type)
 {
 	switch (type)
 	{
@@ -210,7 +182,7 @@ ImColor BlueprintsBaseApp::GetIconColor(PinType type)
 	}
 }
 
-void BlueprintsBaseApp::DrawPinIcon(const Pin& pin, bool connected, int alpha)
+void DrawPinIcon(const Pin& pin, bool connected, int alpha)
 {
 	IconType iconType;
 	ImColor  color = GetIconColor(pin.Type);
@@ -232,232 +204,18 @@ void BlueprintsBaseApp::DrawPinIcon(const Pin& pin, bool connected, int alpha)
 	ax::Widgets::Icon(ImVec2(static_cast<float>(m_PinIconSize), static_cast<float>(m_PinIconSize)), iconType, connected, color, ImColor(32, 32, 32, alpha));
 }
 
-void BlueprintsBaseApp::ShowStyleEditor(bool* show)
-{
-
-}
-
-void BlueprintsBaseApp::ShowLeftPane(float paneWidth)
-{
-	auto& io = ImGui::GetIO();
-
-	ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
-
-	paneWidth = ImGui::GetContentRegionAvail().x;
-
-	ImGui::BeginHorizontal("Style Editor", ImVec2(paneWidth, 0));
-	ImGui::Spring(0.0f, 0.0f);
-	if (ImGui::Button("Zoom to Content"))
-		ed::NavigateToContent();
-	ImGui::Spring(0.0f);
-	if (ImGui::Button("Show Flow"))
-	{
-		for (auto& link : m_Links)
-			ed::Flow(link.ID);
-	}
-	ImGui::Spring();
-
-	m_styleWindow.drawIfNecessary();
-
-	ImGui::EndHorizontal();
-	ImGui::Checkbox("Show Ordinals", &m_ShowOrdinals);
-
-
-	std::vector<ed::NodeId> selectedNodes;
-	std::vector<ed::LinkId> selectedLinks;
-	selectedNodes.resize(ed::GetSelectedObjectCount());
-	selectedLinks.resize(ed::GetSelectedObjectCount());
-
-	int nodeCount = ed::GetSelectedNodes(selectedNodes.data(), static_cast<int>(selectedNodes.size()));
-	int linkCount = ed::GetSelectedLinks(selectedLinks.data(), static_cast<int>(selectedLinks.size()));
-
-	selectedNodes.resize(nodeCount);
-	selectedLinks.resize(linkCount);
-
-	int saveIconWidth = GetTextureWidth(m_SaveIcon);
-	int saveIconHeight = GetTextureWidth(m_SaveIcon);
-	int restoreIconWidth = GetTextureWidth(m_RestoreIcon);
-	int restoreIconHeight = GetTextureWidth(m_RestoreIcon);
-
-	ImGui::GetWindowDrawList()->AddRectFilled(
-		ImGui::GetCursorScreenPos(),
-		ImGui::GetCursorScreenPos() + ImVec2(paneWidth, ImGui::GetTextLineHeight()),
-		ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
-	ImGui::Spacing(); ImGui::SameLine();
-	ImGui::TextUnformatted("Nodes");
-	ImGui::Indent();
-	for (auto& node : m_Nodes)
-	{
-		ImGui::PushID(node->ID.AsPointer());
-		auto start = ImGui::GetCursorScreenPos();
-
-		if (const auto progress = GetTouchProgress(node->ID))
-		{
-			ImGui::GetWindowDrawList()->AddLine(
-				start + ImVec2(-8, 0),
-				start + ImVec2(-8, ImGui::GetTextLineHeight()),
-				IM_COL32(255, 0, 0, 255 - (int)(255 * progress)), 4.0f);
-		}
-
-		bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), node->ID) != selectedNodes.end();
-		if (ImGui::Selectable((node->Name + "##" + std::to_string(reinterpret_cast<uintptr_t>(node->ID.AsPointer()))).c_str(), &isSelected))
-		{
-			if (io.KeyCtrl)
-			{
-				if (isSelected)
-					ed::SelectNode(node->ID, true);
-				else
-					ed::DeselectNode(node->ID);
-			}
-			else
-				ed::SelectNode(node->ID, false);
-
-			ed::NavigateToSelection();
-		}
-		if (ImGui::IsItemHovered() && !node->State.empty())
-			ImGui::SetTooltip("State: %s", node->State.c_str());
-
-		auto id = std::string("(") + std::to_string(reinterpret_cast<uintptr_t>(node->ID.AsPointer())) + ")";
-		auto textSize = ImGui::CalcTextSize(id.c_str(), nullptr);
-		auto iconPanelPos = start + ImVec2(
-			paneWidth - ImGui::GetStyle().FramePadding.x - ImGui::GetStyle().IndentSpacing - saveIconWidth - restoreIconWidth - ImGui::GetStyle().ItemInnerSpacing.x * 1,
-			(ImGui::GetTextLineHeight() - saveIconHeight) / 2);
-		ImGui::GetWindowDrawList()->AddText(
-			ImVec2(iconPanelPos.x - textSize.x - ImGui::GetStyle().ItemInnerSpacing.x, start.y),
-			IM_COL32(255, 255, 255, 255), id.c_str(), nullptr);
-
-		auto drawList = ImGui::GetWindowDrawList();
-		ImGui::SetCursorScreenPos(iconPanelPos);
-		ImGui::SetItemAllowOverlap();
-		if (node->SavedState.empty())
-		{
-			if (ImGui::InvisibleButton("save", ImVec2((float)saveIconWidth, (float)saveIconHeight)))
-				node->SavedState = node->State;
-
-			if (ImGui::IsItemActive())
-				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 96));
-			else if (ImGui::IsItemHovered())
-				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 255));
-			else
-				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 160));
-		}
-		else
-		{
-			ImGui::Dummy(ImVec2((float)saveIconWidth, (float)saveIconHeight));
-			drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 32));
-		}
-
-		ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-		ImGui::SetItemAllowOverlap();
-		if (!node->SavedState.empty())
-		{
-			if (ImGui::InvisibleButton("restore", ImVec2((float)restoreIconWidth, (float)restoreIconHeight)))
-			{
-				node->State = node->SavedState;
-				ed::RestoreNodeState(node->ID);
-				node->SavedState.clear();
-			}
-
-			if (ImGui::IsItemActive())
-				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 96));
-			else if (ImGui::IsItemHovered())
-				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 255));
-			else
-				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 160));
-		}
-		else
-		{
-			ImGui::Dummy(ImVec2((float)restoreIconWidth, (float)restoreIconHeight));
-			drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 32));
-		}
-
-		ImGui::SameLine(0, 0);
-		ImGui::SetItemAllowOverlap();
-		ImGui::Dummy(ImVec2(0, (float)restoreIconHeight));
-
-		ImGui::PopID();
-	}
-	ImGui::Unindent();
-
-	static int changeCount = 0;
-
-	ImGui::GetWindowDrawList()->AddRectFilled(
-		ImGui::GetCursorScreenPos(),
-		ImGui::GetCursorScreenPos() + ImVec2(paneWidth, ImGui::GetTextLineHeight()),
-		ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
-	ImGui::Spacing(); ImGui::SameLine();
-	ImGui::TextUnformatted("Selection");
-
-	ImGui::BeginHorizontal("Selection Stats", ImVec2(paneWidth, 0));
-	ImGui::Text("Changed %d time%s", changeCount, changeCount > 1 ? "s" : "");
-	ImGui::Spring();
-	if (ImGui::Button("Deselect All"))
-		ed::ClearSelection();
-	ImGui::EndHorizontal();
-	ImGui::Indent();
-	for (int i = 0; i < nodeCount; ++i) ImGui::Text("Node (%p)", selectedNodes[i].AsPointer());
-	for (int i = 0; i < linkCount; ++i) ImGui::Text("Link (%p)", selectedLinks[i].AsPointer());
-	ImGui::Unindent();
-
-	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
-		for (auto& link : m_Links)
-			ed::Flow(link.ID);
-
-	if (ed::HasSelectionChanged())
-		++changeCount;
-
-	ImGui::EndChild();
-}
-
 void BlueprintsBaseApp::OnFrame(float deltaTime)
 {
-
 	showFPS();
 	ed::SetCurrentEditor(m_Editor);
 
-	static bool createNewNode = false;
-	static Pin* newNodeLinkPin = nullptr;
-	static Pin* newLinkPin = nullptr;
-
-	ShowLeftPaneAndSplitter();
-
+	m_verticalSplitter->split();
+	m_leftPane->draw();
 	ImGui::SameLine(0.0f, 12.0f);
-
-	ed::Begin("Node editor");
-	{
-		auto cursorTopLeft = ImGui::GetCursorScreenPos();
-
-		util::BlueprintNodeBuilder builder(m_HeaderBackground, GetTextureWidth(m_HeaderBackground), GetTextureHeight(m_HeaderBackground));
-
-		handleNodes(builder, newLinkPin);
-
-		handleNodes2(newLinkPin);
-
-		handleNodes3(newLinkPin);
-
-		handleNodes4();
-
-		handleLinks();
-
-		if (!createNewNode)
-		{
-			pinDragLink(newLinkPin, createNewNode, newNodeLinkPin);
-
-			handleGeneralDelete();
-		}
-
-		ImGui::SetCursorScreenPos(cursorTopLeft);
-	}
-
-	popupsBullshit(newNodeLinkPin, createNewNode);
-
-	auto editorMin = ImGui::GetItemRectMin();
-	auto editorMax = ImGui::GetItemRectMax();
-
-	handleOrdinals(editorMin, editorMax);
+	m_nodeEditorPane->draw();
 }
 
-void BlueprintsBaseApp::handleOrdinals(const ImVec2& editorMin, const ImVec2& editorMax)
+void handleOrdinals(const ImVec2& editorMin, const ImVec2& editorMax)
 {
 	if (m_ShowOrdinals)
 	{
@@ -497,7 +255,7 @@ void BlueprintsBaseApp::handleOrdinals(const ImVec2& editorMin, const ImVec2& ed
 	}
 }
 
-void BlueprintsBaseApp::pinDragLink(Pin*& newLinkPin, bool& createNewNode, Pin*& newNodeLinkPin)
+void pinDragLink(Pin*& newLinkPin, bool& createNewNode, Pin*& newNodeLinkPin)
 {
 	if (ed::BeginCreate(ImColor(255, 255, 255), 2.0f))
 	{
@@ -585,7 +343,7 @@ void BlueprintsBaseApp::pinDragLink(Pin*& newLinkPin, bool& createNewNode, Pin*&
 	ed::EndCreate();
 }
 
-void BlueprintsBaseApp::handleGeneralDelete()
+void handleGeneralDelete()
 {
 	if (ed::BeginDelete())
 	{
@@ -614,13 +372,13 @@ void BlueprintsBaseApp::handleGeneralDelete()
 	ed::EndDelete();
 }
 
-void BlueprintsBaseApp::handleLinks()
+void handleLinks()
 {
 	for (auto& link : m_Links)
 		ed::Link(link.ID, link.StartPinID, link.EndPinID, link.Color, 2.0f);
 }
 
-void BlueprintsBaseApp::handleNodes4()
+void handleNodes4()
 {
 	for (auto& node : m_Nodes)
 	{
@@ -678,7 +436,7 @@ void BlueprintsBaseApp::handleNodes4()
 	}
 }
 
-void BlueprintsBaseApp::handleNodes3(Pin* newLinkPin)
+void handleNodes3(Pin* newLinkPin)
 {
 	for (auto& node : m_Nodes)
 	{
@@ -808,7 +566,7 @@ void BlueprintsBaseApp::handleNodes3(Pin* newLinkPin)
 	}
 }
 
-void BlueprintsBaseApp::handleNodes2(Pin* newLinkPin)
+void handleNodes2(Pin* newLinkPin)
 {
 	for (auto& node : m_Nodes)
 	{
@@ -937,7 +695,7 @@ void BlueprintsBaseApp::handleNodes2(Pin* newLinkPin)
 	}
 }
 
-void BlueprintsBaseApp::handleNodes(ax::NodeEditor::Utilities::BlueprintNodeBuilder& builder, Pin* newLinkPin)
+void handleNodes(ax::NodeEditor::Utilities::BlueprintNodeBuilder& builder, Pin* newLinkPin)
 {
 	for (auto& node : m_Nodes)
 	{
@@ -1078,15 +836,7 @@ void BlueprintsBaseApp::handleNodes(ax::NodeEditor::Utilities::BlueprintNodeBuil
 	}
 }
 
-void BlueprintsBaseApp::ShowLeftPaneAndSplitter()
-{
-	static float leftPaneWidth = 400.0f;
-	static float rightPaneWidth = 800.0f;
-	Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
-	ShowLeftPane(leftPaneWidth - 4.0f);
-}
-
-void BlueprintsBaseApp::popupsBullshit(Pin*& newNodeLinkPin, bool& createNewNode)
+void popupsBullshit(Pin*& newNodeLinkPin, bool& createNewNode)
 {
 	auto openPopupPosition = ImGui::GetMousePos();
 	ed::Suspend();
@@ -1253,4 +1003,204 @@ void BlueprintsBaseApp::showFPS()
 	auto& io = ImGui::GetIO();
 
 	ImGui::Text("FPS: %.2f (%.2gms)", io.Framerate, io.Framerate ? 1000.0f / io.Framerate : 0.0f);
+}
+
+void NodeEditorPane::draw()
+{
+	ed::Begin("Node editor", m_size);
+	{
+		auto cursorTopLeft = ImGui::GetCursorScreenPos();
+
+		//util::BlueprintNodeBuilder builder(m_HeaderBackground, GetTextureWidth(m_HeaderBackground), GetTextureHeight(m_HeaderBackground));
+		util::BlueprintNodeBuilder builder(m_HeaderBackground, 100, 100);
+		handleNodes(builder, newLinkPin);
+
+		handleNodes2(newLinkPin);
+
+		handleNodes3(newLinkPin);
+
+		handleNodes4();
+
+		handleLinks();
+
+		if (!createNewNode)
+		{
+			pinDragLink(newLinkPin, createNewNode, newNodeLinkPin);
+
+			handleGeneralDelete();
+		}
+
+		ImGui::SetCursorScreenPos(cursorTopLeft);
+	}
+
+	popupsBullshit(newNodeLinkPin, createNewNode);
+
+	auto editorMin = ImGui::GetItemRectMin();
+	auto editorMax = ImGui::GetItemRectMax();
+
+	handleOrdinals(editorMin, editorMax);
+}
+
+void LeftPane::draw()
+{
+	auto& io = ImGui::GetIO();
+	ImGui::BeginChild("Selection", ImVec2(m_size.x, 0));
+
+	m_size.x = ImGui::GetContentRegionAvail().x;
+
+	ImGui::BeginHorizontal("Style Editor", ImVec2(m_size.x, 0));
+	ImGui::Spring(0.0f, 0.0f);
+	if (ImGui::Button("Zoom to Content"))
+		ed::NavigateToContent();
+	ImGui::Spring(0.0f);
+	if (ImGui::Button("Show Flow"))
+	{
+		for (auto& link : m_Links)
+			ed::Flow(link.ID);
+	}
+	ImGui::Spring();
+
+	m_styleWindow.drawIfNecessary();
+
+	ImGui::EndHorizontal();
+	ImGui::Checkbox("Show Ordinals", &m_ShowOrdinals);
+
+
+	std::vector<ed::NodeId> selectedNodes;
+	std::vector<ed::LinkId> selectedLinks;
+	selectedNodes.resize(ed::GetSelectedObjectCount());
+	selectedLinks.resize(ed::GetSelectedObjectCount());
+
+	int nodeCount = ed::GetSelectedNodes(selectedNodes.data(), static_cast<int>(selectedNodes.size()));
+	int linkCount = ed::GetSelectedLinks(selectedLinks.data(), static_cast<int>(selectedLinks.size()));
+
+	selectedNodes.resize(nodeCount);
+	selectedLinks.resize(linkCount);
+
+	int saveIconWidth = 20;//GetTextureWidth(m_SaveIcon);
+	int saveIconHeight = 20; //GetTextureWidth(m_SaveIcon);
+	int restoreIconWidth = 20; //GetTextureWidth(m_RestoreIcon);
+	int restoreIconHeight = 20; //GetTextureWidth(m_RestoreIcon);
+
+
+	ImGui::GetWindowDrawList()->AddRectFilled(
+		ImGui::GetCursorScreenPos(),
+		ImGui::GetCursorScreenPos() + ImVec2(m_size.x, ImGui::GetTextLineHeight()),
+		ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
+	ImGui::Spacing(); ImGui::SameLine();
+	ImGui::TextUnformatted("Nodes");
+	ImGui::Indent();
+	for (auto& node : m_Nodes)
+	{
+		ImGui::PushID(node->ID.AsPointer());
+		auto start = ImGui::GetCursorScreenPos();
+
+		bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), node->ID) != selectedNodes.end();
+		if (ImGui::Selectable((node->Name + "##" + std::to_string(reinterpret_cast<uintptr_t>(node->ID.AsPointer()))).c_str(), &isSelected))
+		{
+			if (io.KeyCtrl)
+			{
+				if (isSelected)
+					ed::SelectNode(node->ID, true);
+				else
+					ed::DeselectNode(node->ID);
+			}
+			else
+				ed::SelectNode(node->ID, false);
+
+			ed::NavigateToSelection();
+		}
+		if (ImGui::IsItemHovered() && !node->State.empty())
+			ImGui::SetTooltip("State: %s", node->State.c_str());
+
+		auto id = std::string("(") + std::to_string(reinterpret_cast<uintptr_t>(node->ID.AsPointer())) + ")";
+		auto textSize = ImGui::CalcTextSize(id.c_str(), nullptr);
+		auto iconPanelPos = start + ImVec2(
+			m_size.x - ImGui::GetStyle().FramePadding.x - ImGui::GetStyle().IndentSpacing - saveIconWidth - restoreIconWidth - ImGui::GetStyle().ItemInnerSpacing.x * 1,
+			(ImGui::GetTextLineHeight() - saveIconHeight) / 2);
+		ImGui::GetWindowDrawList()->AddText(
+			ImVec2(iconPanelPos.x - textSize.x - ImGui::GetStyle().ItemInnerSpacing.x, start.y),
+			IM_COL32(255, 255, 255, 255), id.c_str(), nullptr);
+
+		auto drawList = ImGui::GetWindowDrawList();
+		ImGui::SetCursorScreenPos(iconPanelPos);
+		ImGui::SetItemAllowOverlap();
+		if (node->SavedState.empty())
+		{
+			if (ImGui::InvisibleButton("save", ImVec2((float)saveIconWidth, (float)saveIconHeight)))
+				node->SavedState = node->State;
+
+			if (ImGui::IsItemActive())
+				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 96));
+			else if (ImGui::IsItemHovered())
+				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 255));
+			else
+				drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 160));
+		}
+		else
+		{
+			ImGui::Dummy(ImVec2((float)saveIconWidth, (float)saveIconHeight));
+			drawList->AddImage(m_SaveIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 32));
+		}
+
+		ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+		ImGui::SetItemAllowOverlap();
+		if (!node->SavedState.empty())
+		{
+			if (ImGui::InvisibleButton("restore", ImVec2((float)restoreIconWidth, (float)restoreIconHeight)))
+			{
+				node->State = node->SavedState;
+				ed::RestoreNodeState(node->ID);
+				node->SavedState.clear();
+			}
+
+			if (ImGui::IsItemActive())
+				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 96));
+			else if (ImGui::IsItemHovered())
+				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 255));
+			else
+				drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 160));
+		}
+		else
+		{
+			ImGui::Dummy(ImVec2((float)restoreIconWidth, (float)restoreIconHeight));
+			drawList->AddImage(m_RestoreIcon, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, 32));
+		}
+
+		ImGui::SameLine(0, 0);
+		ImGui::SetItemAllowOverlap();
+		ImGui::Dummy(ImVec2(0, (float)restoreIconHeight));
+
+		ImGui::PopID();
+	}
+	ImGui::Unindent();
+
+	static int changeCount = 0;
+
+	ImGui::GetWindowDrawList()->AddRectFilled(
+		ImGui::GetCursorScreenPos(),
+		ImGui::GetCursorScreenPos() + ImVec2(m_size.x, ImGui::GetTextLineHeight()),
+		ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
+	ImGui::Spacing(); ImGui::SameLine();
+	ImGui::TextUnformatted("Selection");
+
+	ImGui::BeginHorizontal("Selection Stats", ImVec2(m_size.x, 0));
+	ImGui::Text("Changed %d time%s", changeCount, changeCount > 1 ? "s" : "");
+	ImGui::Spring();
+	if (ImGui::Button("Deselect All"))
+		ed::ClearSelection();
+	ImGui::EndHorizontal();
+	ImGui::Indent();
+	for (int i = 0; i < nodeCount; ++i) ImGui::Text("Node (%p)", selectedNodes[i].AsPointer());
+	for (int i = 0; i < linkCount; ++i) ImGui::Text("Link (%p)", selectedLinks[i].AsPointer());
+	ImGui::Unindent();
+
+	if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
+		for (auto& link : m_Links)
+			ed::Flow(link.ID);
+
+	if (ed::HasSelectionChanged())
+		++changeCount;
+
+	ImGui::EndChild();
 }
