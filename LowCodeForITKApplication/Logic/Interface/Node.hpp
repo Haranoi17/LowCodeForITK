@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Pin.hpp"
+#include <iostream>
 
 class Node
 {
@@ -11,5 +12,9 @@ public:
 	std::vector<std::shared_ptr<Pin>> m_inputPins;
 	std::vector<std::shared_ptr<Pin>> m_outputPins;
 
+	virtual void calculate() { std::cout << name << " node calculation\n"; };
+	virtual void populateOutputPins() { std::cout << name << " populating output pins \n"; };
+
 	IDType id;
+	std::string name;
 };

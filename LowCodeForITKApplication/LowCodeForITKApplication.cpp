@@ -17,9 +17,18 @@ void LowCodeForITKApplication::OnStop()
 	ed::DestroyEditor(m_Context);
 }
 
+void LowCodeForITKApplication::buttonForTriggeringEvaluation()
+{
+	if (ImGui::Button("TriggerEvaluationButton", ImVec2{ 200,40 }))
+	{
+		m_logic.propagateEvaluationThroughTheNodes();
+	}
+}
+
 void LowCodeForITKApplication::OnFrame(float deltaTime)
 {
 	showFPS();
+	buttonForTriggeringEvaluation();
 
 	ImGui::Separator();
 
@@ -54,19 +63,8 @@ void LowCodeForITKApplication::handleDeleting()
 		{
 			if (ed::AcceptDeletedItem())
 			{
-				// Then remove link from your data.
-				/*	for (auto& link : m_Links)
-				{
-				if (link.Id == deletedLinkId)
-				{
-				m_Links.erase(&link);
-				break;
-				}
-				}*/
+				m_logic.deleteLink(deletedLinkId.Get());
 			}
-
-			// You may reject link deletion by calling:
-			// ed::RejectDeletedItem();
 		}
 	}
 	ed::EndDelete();
@@ -98,7 +96,6 @@ void LowCodeForITKApplication::pinsVisualLinking()
 				if (ed::AcceptNewItem())
 				{
 					m_logic.createLink(std::make_pair(inputPinId.Get(), outputPinId.Get()));
-					//ed::Link(m_Links.back().Id, m_Links.back().InputId, m_Links.back().OutputId);
 				}
 			}
 			else
