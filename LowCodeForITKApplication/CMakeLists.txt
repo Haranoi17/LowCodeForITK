@@ -9,20 +9,18 @@ add_executable(${TargetName} ${sources})
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${sources})
 
-set(INCLUDE_DIRS 
-${CMAKE_CURRENT_SOURCE_DIR}
-${CMAKE_CURRENT_SOURCE_DIR}/Identification
+target_link_libraries(${TargetName} PRIVATE 
+imgui_node_editor::imgui_node_editor 
+imgui_node_editor::imgui 
+imgui_node_editor::application
 )
 
-target_include_directories(${TargetName} PUBLIC 
-${INCLUDE_DIRS}
-${imgui-node-editor_INCLUDE_DIRS}
-${imgui_INCLUDE_DIRS}
-)
-
-target_link_libraries(${TargetName} PUBLIC ${imgui-node-editor_LIBRARIES} ${imgui_LIBRARIES})
+target_include_directories(${TargetName} PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Identification
+    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui_node_editor
+    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui
+    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/application
+    )
 
 target_link_options(${TargetName} PRIVATE /ENTRY:WinMainCRTStartup)
-
-file(COPY ${imgui-node-editor_RESOURCE_DIR} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${imgui-node-editor_RESOURCE_DIR} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
