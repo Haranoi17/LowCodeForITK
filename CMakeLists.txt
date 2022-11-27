@@ -4,6 +4,7 @@ project( LowCodeForITK )
 #ITK------------------------------------------------------------------------
 #You have to install ITK first in your system
 find_package(ITK REQUIRED)
+include( ${ITK_USE_FILE} )
 #---------------------------------------------------------------------------
 
 #ImGuiNodeEditor------------------------------------------------------------\
