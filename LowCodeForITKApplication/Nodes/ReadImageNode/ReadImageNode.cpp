@@ -17,6 +17,10 @@ void ReadImageNode::acceptDrawVisitor(DrawVisitor *drawVisitor)
 
 void ReadImageNode::populateOutputPins()
 {
-    // imagePin->payload = itk::ReadImage<ImageType>(imagePath);
-    imagePin->payload = itk::ReadImage<ImageType>("data/testImage.png");
+    if (imagePath.empty())
+    {
+        return;
+    }
+
+    imagePin->payload = itk::ReadImage<ImageType>(imagePath);
 }

@@ -5,6 +5,7 @@
 #include "UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 #include "imgui_node_editor.h"
 #include <application.h>
+#include <imgui-filebrowser\imfilebrowser.h>
 
 namespace ed = ax::NodeEditor;
 
@@ -20,6 +21,10 @@ struct LowCodeForITKApplication : public Application
 
     void OnFrame(float deltaTime) override;
 
+    void drawMenu();
+
+    void ImGuiDemoModal();
+
     void buttonForNodesModal();
 
     void drawingLinks();
@@ -28,6 +33,8 @@ struct LowCodeForITKApplication : public Application
 
     void showFPS();
     void handleDeleting();
+
+    void linksDeletion();
 
     ax::NodeEditor::EditorContext *m_Context    = nullptr; // Editor context, required to trace a editor state.
     bool                           m_FirstFrame = true;    // Flag set for first frame only, some action need

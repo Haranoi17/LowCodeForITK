@@ -15,6 +15,7 @@ void Logic::init()
     m_idProvider = std::make_unique<SimpleIDProvider>();
 
     m_nodeCreators["ImageView"] = [&]() { return std::make_unique<ImageViewNode>(m_idProvider.get()); };
+    m_nodeCreators["ImageRead"] = [&]() { return std::make_unique<ReadImageNode>(m_idProvider.get()); };
 
     m_nodes.emplace_back(std::make_unique<ReadImageNode>(m_idProvider.get()));
     m_nodes.emplace_back(std::make_unique<ImageViewNode>(m_idProvider.get()));
@@ -111,9 +112,31 @@ void Logic::deleteLink(IDType linkId)
 
     secondPin->connectedPins.erase(removeBeginForSecond, removeEndForSecond);
 
-    auto [removeBeginForLink, removeEndForLink] = std::ranges::remove_if(
-        m_links, [&](const std::unique_ptr<LinkInfo> &linkInfo) { return linkInfo->id == linkId; });
+    auto [removeBeginForLink, removeEndForLink] = std::ranges::remove(m_links, linkInfo->id, &LinkInfo::id);
+
     m_links.erase(removeBeginForLink, removeEndForLink);
+}
+
+void Logic::deleteNode(IDType nodeId)
+{
+    Node                   *node{getNodeById(nodeId)};
+    std::vector<LinkInfo *> nodeLinks;
+
+    std::ranges::for_each(node->m_inputPins, [&](const std::unique_ptr<Pin> &inputPin) {
+        std::ranges::for_each(getPinLinks(inputPin.get()),
+                              [&](LinkInfo *linkInfo) { nodeLinks.emplace_back(linkInfo); });
+    });
+
+    std::ranges::for_each(node->m_outputPins, [&](const std::unique_ptr<Pin> &outputPin) {
+        std::ranges::for_each(getPinLinks(outputPin.get()),
+                              [&](LinkInfo *linkInfo) { nodeLinks.emplace_back(linkInfo); });
+    });
+
+    std::ranges::for_each(nodeLinks, [&](LinkInfo *linkInfo) { deleteLink(linkInfo->id); });
+
+    auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(m_nodes, node->id, &Node::id);
+
+    m_nodes.erase(beginRemoveNodes, endRemoveNodes);
 }
 
 const std::vector<std::unique_ptr<LinkInfo>> &Logic::getLinks()
@@ -134,6 +157,30 @@ Pin *Logic::getPinById(IDType id) const
     assert(it != std::end(ptrs), "Drawing representation data missmatch FATAL!!!");
 
     return *it;
+}
+
+Node *Logic::getNodeById(IDType id) const
+{
+    for (auto it = std::begin(m_nodes); it < std::end(m_nodes); it++)
+    {
+        if (it->get()->id == id)
+        {
+            return it->get();
+        }
+    }
+}
+
+std::vector<LinkInfo *> Logic::getPinLinks(Pin *pin) const
+{
+    std::vector<LinkInfo *> linksInfo;
+    std::ranges::for_each(m_links, [&](const std::unique_ptr<LinkInfo> &linkInfo) {
+        if (pin->id == linkInfo->pinIds.first || pin->id == linkInfo->pinIds.second)
+        {
+            linksInfo.emplace_back(linkInfo.get());
+        }
+    });
+
+    return linksInfo;
 }
 
 bool Logic::isPinOnNode(const Node *node, const Pin *pin) const
@@ -192,8 +239,8 @@ void Logic::cleanNonInputNodesPins()
 
 const LinkInfo *Logic::getLinkInfoById(IDType linkId) const
 {
-    auto it =
-        std::ranges::find_if(m_links, [&](const std::unique_ptr<LinkInfo> &linkInfo) { return linkInfo->id = linkId; });
+    auto it = std::ranges::find_if(m_links,
+                                   [&](const std::unique_ptr<LinkInfo> &linkInfo) { return linkInfo->id == linkId; });
 
     assert(it != std::end(m_links), "Drawing representation data missmatch FATAL!!!");
 

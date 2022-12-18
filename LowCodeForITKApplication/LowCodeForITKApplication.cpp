@@ -28,15 +28,15 @@ void LowCodeForITKApplication::buttonForTriggeringEvaluation()
 void LowCodeForITKApplication::OnFrame(float deltaTime)
 {
     showFPS();
-    buttonForTriggeringEvaluation();
     ImGui::SameLine();
-    buttonForNodesModal();
-
     ImGui::Separator();
 
     ed::SetCurrentEditor(m_Context);
 
     ed::Begin("Editor", ImVec2(0.0, 0.0f));
+
+    drawMenu();
+
     auto cursorTopLeft = ImGui::GetCursorScreenPos();
 
     std::ranges::for_each(m_logic.getNodes(),
@@ -48,6 +48,7 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
 
     handleDeleting();
     ImGui::SetCursorScreenPos(cursorTopLeft);
+
     ed::End(); // Editor
 
     if (m_FirstFrame)
@@ -56,6 +57,33 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
     ed::SetCurrentEditor(nullptr);
 
     m_FirstFrame = false;
+}
+
+void LowCodeForITKApplication::drawMenu()
+{
+    ed::Suspend();
+    ImGui::Begin("menu");
+    buttonForTriggeringEvaluation();
+    buttonForNodesModal();
+
+    ImGuiDemoModal();
+
+    ImGui::End();
+    ed::Resume();
+}
+
+void LowCodeForITKApplication::ImGuiDemoModal()
+{
+    static bool open{false};
+    if (ImGui::Button("demo"))
+    {
+        open = true;
+    }
+
+    if (open)
+    {
+        ImGui::ShowDemoWindow(&open);
+    }
 }
 
 void LowCodeForITKApplication::buttonForNodesModal()
@@ -89,16 +117,29 @@ void LowCodeForITKApplication::handleDeleting()
 {
     if (ed::BeginDelete())
     {
-        ed::LinkId deletedLinkId;
-        while (ed::QueryDeletedLink(&deletedLinkId))
+        linksDeletion();
+        ed::NodeId deletedNodeId;
+        while (ed::QueryDeletedNode(&deletedNodeId))
         {
             if (ed::AcceptDeletedItem())
             {
-                m_logic.deleteLink(deletedLinkId.Get());
+                m_logic.deleteNode(deletedNodeId.Get());
             }
         }
     }
     ed::EndDelete();
+}
+
+void LowCodeForITKApplication::linksDeletion()
+{
+    ed::LinkId deletedLinkId;
+    while (ed::QueryDeletedLink(&deletedLinkId))
+    {
+        if (ed::AcceptDeletedItem())
+        {
+            m_logic.deleteLink(deletedLinkId.Get());
+        }
+    }
 }
 
 void LowCodeForITKApplication::showFPS()

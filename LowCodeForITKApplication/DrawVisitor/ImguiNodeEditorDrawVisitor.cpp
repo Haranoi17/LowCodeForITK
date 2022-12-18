@@ -18,31 +18,48 @@ void ImguiNodeEditorDrawVisitor::drawNode(const Node *node) const
     ed::EndNode();
 }
 
-void ImguiNodeEditorDrawVisitor::drawReadImageNode(ReadImageNode *node) const
+void ImguiNodeEditorDrawVisitor::drawReadImageNode(ReadImageNode *node)
 {
+    static IDType nodeIDForFileBrowsing;
+
     defaultNodeBegin(node);
 
-    char buf[128];
-    strcpy(buf, node->imagePath.c_str());
-    ImGui::PushItemWidth(300);
-    if (ImGui::InputText("imagePath", buf, 128))
+    if (ImGui::Button(std::format("Browse {}", node->id).c_str()))
     {
-        node->imagePath = buf;
+        fileBrowser.Open();
+        nodeIDForFileBrowsing = node->id;
     }
 
+    std::wstring p = fileBrowser.GetSelected().native().c_str();
+    std::string  pp;
+
+    if (fileBrowser.HasSelected())
+    {
+        for (const auto &wch : p)
+        {
+            pp.push_back(wch);
+        }
+
+        if (node->id == nodeIDForFileBrowsing)
+        {
+            node->imagePath = pp;
+        }
+    };
+
+    ImGui::TextWrapped(std::format("Path: {}", node->imagePath).c_str());
     ed::EndNode();
+    ed::Suspend();
+    fileBrowser.Display();
+    ed::Resume();
 }
 
-void ImguiNodeEditorDrawVisitor::drawImageViewNode(const ImageViewNode *node) const
+void ImguiNodeEditorDrawVisitor::drawImageViewNode(ImageViewNode *node)
 {
-    static ImTextureID texture;
-    static int         width, height;
-
     defaultNodeBegin(node);
 
     if (node->imagePin->payload.has_value())
     {
-        if (!texture)
+        if (!node->texture)
         {
             std::string fileName{std::format("ImageViewNode{}Preview.png", node->id)};
             auto        image  = std::any_cast<itk::SmartPointer<ImageViewNode::ImageType>>(node->imagePin->payload);
@@ -52,22 +69,22 @@ void ImguiNodeEditorDrawVisitor::drawImageViewNode(const ImageViewNode *node) co
             writer->Update();
 
             int component = 0;
-            if (auto data = stbi_load(fileName.c_str(), &width, &height, &component, 4))
+            if (auto data = stbi_load(fileName.c_str(), &node->width, &node->height, &component, 4))
             {
-                texture = imguiApplication->CreateTexture(data, width, height);
+                node->texture = imguiApplication->CreateTexture(data, node->width, node->height);
             }
         }
         else
         {
-            ImGui::Image((void *)texture, ImVec2(width, height));
+            ImGui::Image((void *)node->texture, ImVec2(node->width, node->height));
         }
     }
     else
     {
-        if (texture)
+        if (node->texture)
         {
-            imguiApplication->DestroyTexture(texture);
-            texture = nullptr;
+            imguiApplication->DestroyTexture(node->texture);
+            node->texture = nullptr;
         }
     }
     ed::EndNode();
@@ -95,7 +112,7 @@ void ImguiNodeEditorDrawVisitor::defaultNodeBegin(const Node *node) const
     ImGui::BeginGroup();
     std::ranges::for_each(node->m_inputPins, [&](const std::unique_ptr<Pin> &pin) { drawInputPin(pin.get()); });
     ImGui::EndGroup();
-    ImGui::SameLine();
+    node->m_inputPins.empty() ? ImGui::SameLine(200) : ImGui::SameLine();
     ImGui::BeginGroup();
     std::ranges::for_each(node->m_outputPins, [&](const std::unique_ptr<Pin> &pin) { drawOutputPin(pin.get()); });
     ImGui::EndGroup();

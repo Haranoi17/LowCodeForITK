@@ -14,6 +14,7 @@ target_link_libraries(${TargetName} PRIVATE
     imgui_node_editor::imgui 
     imgui_node_editor::application
     imgui_node_editor::stb_image
+    imgui-filebrowser::imgui-filebrowser
     ${ITK_LIBRARIES}
 )
 
@@ -25,6 +26,7 @@ target_include_directories(${TargetName} PRIVATE
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/application
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/stb_image
     ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
+    ${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/
 )
 
 if(MSVC)

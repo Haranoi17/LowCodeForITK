@@ -28,6 +28,7 @@ class Logic
     void chainReaction(Pin *outputPin);
 
     void deleteLink(IDType linkId);
+    void deleteNode(IDType nodeId);
     bool isLinkPossible(std::pair<IDType, IDType> pinIdPair);
     void createLink(std::pair<IDType, IDType> pinIdPair);
 
@@ -39,7 +40,9 @@ class Logic
     std::map<std::string, std::function<std::unique_ptr<Node>()>> m_nodeCreators;
 
   private:
-    Pin *getPinById(IDType id) const;
+    std::vector<LinkInfo *> getPinLinks(Pin *pin) const;
+    Pin                    *getPinById(IDType id) const;
+    Node                   *getNodeById(IDType id) const;
 
     bool isPinOnNode(const Node *node, const Pin *pin) const;
     bool isNodeAnInput(const Node *node) const;

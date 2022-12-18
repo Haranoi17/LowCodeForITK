@@ -1,6 +1,7 @@
 #pragma once
 #include "Nodes/Interface/Node.hpp"
-#include "Nodes\ReadImageNode\ReadImageNode.hpp"
+#include "Nodes/ReadImageNode/ReadImageNode.hpp"
+#include <imgui.h>
 #include <itkImage.h>
 
 class ImageViewNode : public Node
@@ -14,4 +15,8 @@ class ImageViewNode : public Node
     void acceptDrawVisitor(DrawVisitor *drawVisitor) override;
 
     Pin *imagePin;
+
+    ImTextureID texture{};
+    int         width{};
+    int         height{};
 };

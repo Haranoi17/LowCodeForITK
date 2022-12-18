@@ -16,7 +16,7 @@ include( ${ITK_USE_FILE} )
 #---------------------------------------------------------------------------
 
 find_package(imgui_node_editor REQUIRED)
-
+find_package(imgui-filebrowser REQUIRED)
 #gtest----------------------------------------------------------------------
 # find_package(gtest REQUIRED)
 #---------------------------------------------------------------------------
