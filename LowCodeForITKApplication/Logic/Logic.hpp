@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "DrawStrategy/NodeDrawStrategy.hpp"
 #include "Nodes/Interface/Node.hpp"
 #include "UniqueIDProvider/Interface/UniqueIDProvider.hpp"
 #include <utility>
-
 struct LinkInfo
 {
     LinkInfo(IDType id, std::pair<IDType, IDType> pins) : id{id}, pinIds{pins}
@@ -17,6 +17,12 @@ struct LinkInfo
     }
     IDType                    id;
     std::pair<IDType, IDType> pinIds;
+};
+
+struct NodeWithDrawStrategy
+{
+    std::unique_ptr<Node>             node;
+    std::unique_ptr<NodeDrawStrategy> drawStrategy;
 };
 
 class Logic
@@ -33,11 +39,12 @@ class Logic
     void createLink(std::pair<IDType, IDType> pinIdPair);
 
     void addNode(std::unique_ptr<Node> newNode);
+    void addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy);
 
-    const std::vector<std::unique_ptr<Node>>     &getNodes();
-    const std::vector<std::unique_ptr<LinkInfo>> &getLinks();
+    const std::vector<std::unique_ptr<NodeDrawStrategy>> &getNodesDrawStrategies();
+    const std::vector<std::unique_ptr<LinkInfo>>         &getLinks();
 
-    std::map<std::string, std::function<std::unique_ptr<Node>()>> m_nodeCreators;
+    std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> m_nodeCreators;
 
   private:
     std::vector<LinkInfo *> getPinLinks(Pin *pin) const;
@@ -60,7 +67,8 @@ class Logic
 
     void cleanNonInputNodesPins();
 
-    std::vector<std::unique_ptr<LinkInfo>> m_links;
-    std::vector<std::unique_ptr<Node>>     m_nodes;
-    std::unique_ptr<UniqueIDProvider>      m_idProvider;
+    std::vector<std::unique_ptr<LinkInfo>>         m_links;
+    std::vector<std::unique_ptr<Node>>             m_nodes;
+    std::vector<std::unique_ptr<NodeDrawStrategy>> m_drawNodeStrategies;
+    std::unique_ptr<UniqueIDProvider>              m_idProvider;
 };

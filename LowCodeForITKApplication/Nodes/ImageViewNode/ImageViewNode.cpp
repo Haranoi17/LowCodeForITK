@@ -6,8 +6,3 @@ ImageViewNode::ImageViewNode(UniqueIDProvider *idProvider, std::string_view name
     m_inputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
     imagePin = m_inputPins.back().get();
 }
-
-void ImageViewNode::acceptDrawVisitor(DrawVisitor *drawVisitor)
-{
-    drawVisitor->drawImageViewNode(this);
-}

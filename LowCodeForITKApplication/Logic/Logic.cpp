@@ -7,18 +7,26 @@
 #include <iostream>
 #include <ranges>
 
+#include "DrawStrategy/ImageReadNodeDrawStrategy.hpp"
+#include "DrawStrategy/ImageViewNodeDrawStrategy.hpp"
+#include "Nodes/ImageReadNode/ImageReadNode.hpp"
 #include "Nodes/ImageViewNode/ImageViewNode.hpp"
-#include "Nodes/ReadImageNode/ReadImageNode.hpp"
 
 void Logic::init()
 {
     m_idProvider = std::make_unique<SimpleIDProvider>();
 
-    m_nodeCreators["ImageView"] = [&]() { return std::make_unique<ImageViewNode>(m_idProvider.get()); };
-    m_nodeCreators["ImageRead"] = [&]() { return std::make_unique<ReadImageNode>(m_idProvider.get()); };
+    m_nodeCreators["ImageView"] = [&]() {
+        auto node         = std::make_unique<ImageViewNode>(m_idProvider.get());
+        auto drawStrategy = std::make_unique<ImageViewNodeDrawStrategy>(node.get());
+        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+    };
 
-    m_nodes.emplace_back(std::make_unique<ReadImageNode>(m_idProvider.get()));
-    m_nodes.emplace_back(std::make_unique<ImageViewNode>(m_idProvider.get()));
+    m_nodeCreators["ImageRead"] = [&]() {
+        auto node         = std::make_unique<ImageReadNode>(m_idProvider.get());
+        auto drawStrategy = std::make_unique<ImageReadNodeDrawStrategy>(node.get());
+        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+    };
 }
 
 void Logic::chainReaction(Pin *outputPin)
@@ -92,6 +100,11 @@ void Logic::addNode(std::unique_ptr<Node> newNode)
     m_nodes.emplace_back(std::move(newNode));
 }
 
+void Logic::addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy)
+{
+    m_drawNodeStrategies.push_back(std::move(nodeDrawStrategy));
+}
+
 void Logic::deleteLink(IDType linkId)
 {
     const auto &linkInfo  = getLinkInfoById(linkId);
@@ -135,8 +148,11 @@ void Logic::deleteNode(IDType nodeId)
     std::ranges::for_each(nodeLinks, [&](LinkInfo *linkInfo) { deleteLink(linkInfo->id); });
 
     auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(m_nodes, node->id, &Node::id);
+    auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] =
+        std::ranges::remove(m_drawNodeStrategies, node->id, &NodeDrawStrategy::nodeToDrawID);
 
     m_nodes.erase(beginRemoveNodes, endRemoveNodes);
+    m_drawNodeStrategies.erase(beginRemoveDrawStrategy, endRemoveDrawStrategy);
 }
 
 const std::vector<std::unique_ptr<LinkInfo>> &Logic::getLinks()
@@ -144,9 +160,9 @@ const std::vector<std::unique_ptr<LinkInfo>> &Logic::getLinks()
     return m_links;
 }
 
-const std::vector<std::unique_ptr<Node>> &Logic::getNodes()
+const std::vector<std::unique_ptr<NodeDrawStrategy>> &Logic::getNodesDrawStrategies()
 {
-    return m_nodes;
+    return m_drawNodeStrategies;
 }
 
 Pin *Logic::getPinById(IDType id) const

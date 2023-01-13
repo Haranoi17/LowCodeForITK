@@ -19,14 +19,13 @@ target_link_libraries(${TargetName} PRIVATE
 )
 
 target_include_directories(${TargetName} PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Identification
+    ${CMAKE_CURRENT_SOURCE_DIR}/
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui_node_editor
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/application
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/stb_image
-    ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
     ${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/
+    ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
 )
 
 if(MSVC)

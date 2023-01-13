@@ -1,7 +1,12 @@
 #include "Node.hpp"
 #include <algorithm>
 
-void Node::acceptDrawVisitor(DrawVisitor *drawVisitor)
+void Node::calculate()
 {
-    drawVisitor->drawNode(this);
+    std::cout << "NODE:\n   " << name << " node calculation\n";
+}
+
+void Node::populateOutputPins()
+{
+    std::cout << "  " << name << " populating output pins \n";
 }

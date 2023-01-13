@@ -1,21 +1,16 @@
-#include "ReadImageNode.hpp"
+#include "ImageReadNode.hpp"
 #include "Pins/ImagePin/ImagePin.hpp"
 
 #include <itkImageFileReader.h>
 
-ReadImageNode::ReadImageNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+ImageReadNode::ImageReadNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
 {
 
     m_outputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
     imagePin = m_outputPins.back().get();
 }
 
-void ReadImageNode::acceptDrawVisitor(DrawVisitor *drawVisitor)
-{
-    drawVisitor->drawReadImageNode(this);
-}
-
-void ReadImageNode::populateOutputPins()
+void ImageReadNode::populateOutputPins()
 {
     if (imagePath.empty())
     {

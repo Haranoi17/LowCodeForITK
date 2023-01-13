@@ -1,5 +1,5 @@
 #include "LowCodeForITKApplication.hpp"
-#include "DrawVisitor/ImguiNodeEditorDrawVisitor.hpp"
+#include "TexturesOperationsProxySingleton.hpp"
 #include <algorithm>
 
 void LowCodeForITKApplication::OnStart()
@@ -8,7 +8,8 @@ void LowCodeForITKApplication::OnStart()
     config.SettingsFile = "LowCodeForITKApplication.json";
     m_Context           = ed::CreateEditor(&config);
 
-    m_drawVisitor = std::make_unique<ImguiNodeEditorDrawVisitor>(this);
+    TexturesOperationsProxySingleton::instance(this); // set this application as proxys operator
+
     m_logic.init();
 }
 
@@ -39,8 +40,8 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
 
     auto cursorTopLeft = ImGui::GetCursorScreenPos();
 
-    std::ranges::for_each(m_logic.getNodes(),
-                          [&](const std::unique_ptr<Node> &node) { node->acceptDrawVisitor(m_drawVisitor.get()); });
+    std::ranges::for_each(m_logic.getNodesDrawStrategies(),
+                          [&](const std::unique_ptr<NodeDrawStrategy> &nodeDrawStrategy) { nodeDrawStrategy->draw(); });
 
     drawingLinks();
 
@@ -96,13 +97,13 @@ void LowCodeForITKApplication::buttonForNodesModal()
     if (ImGui::BeginPopupModal("NodesDrawerModal"))
     {
 
-        for (auto nameCreatorPair : m_logic.m_nodeCreators)
+        for (auto [nodeName, nodeWithDrawStrategyCreator] : m_logic.m_nodeCreators)
         {
-            auto nodeName    = nameCreatorPair.first;
-            auto nodeCreator = nameCreatorPair.second;
             if (ImGui::Button(nodeName.c_str()))
             {
-                m_logic.addNode(nodeCreator());
+                auto nodeWithDrawStrategy = nodeWithDrawStrategyCreator();
+                m_logic.addNode(std::move(nodeWithDrawStrategy->node));
+                m_logic.addNodeDrawStrategy(std::move(nodeWithDrawStrategy->drawStrategy));
                 ImGui::CloseCurrentPopup();
             }
         }

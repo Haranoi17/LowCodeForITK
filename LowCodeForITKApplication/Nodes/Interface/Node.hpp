@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 
-#include "DrawVisitor/Interface/DrawVisitor.hpp"
 #include "Pins/Interface/Pin.hpp"
 #include <iostream>
 
@@ -13,16 +12,9 @@ class Node
     {
     }
 
-    virtual void acceptDrawVisitor(DrawVisitor *drawStrategy);
-    virtual void calculate()
-    {
-        std::cout << "NODE:\n   " << name << " node calculation\n";
-    };
+    virtual void calculate();
 
-    virtual void populateOutputPins()
-    {
-        std::cout << "  " << name << " populating output pins \n";
-    };
+    virtual void populateOutputPins();
 
     IDType                            id;
     std::string                       name;
