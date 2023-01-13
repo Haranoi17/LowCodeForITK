@@ -9,41 +9,39 @@
 namespace ed = ax::NodeEditor;
 
 ImageReadNodeDrawStrategy::ImageReadNodeDrawStrategy(ImageReadNode *imageViewNode)
-    : NodeDrawStrategy{imageViewNode}, m_imageViewNode{imageViewNode}
+    : BlueprintNodeDrawStrategy{imageViewNode}, m_imageViewNode{imageViewNode}
 {
 }
 
-void ImageReadNodeDrawStrategy::draw()
+void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 {
-    static IDType nodeIDForFileBrowsing;
-
-    defaultNodeBegin(m_imageViewNode);
-
     if (ImGui::Button(std::format("Browse {}", m_imageViewNode->id).c_str()))
     {
-        // fileBrowser.Open();
-        nodeIDForFileBrowsing = m_imageViewNode->id;
+        m_filebrowser.Open();
     }
 
-    // std::wstring p = fileBrowser.GetSelected().native().c_str();
-    // std::string  pp;
+    std::wstring p = m_filebrowser.GetSelected().native().c_str();
+    std::string  pp;
 
-    /* if (fileBrowser.HasSelected())
-     {
-         for (const auto &wch : p)
-         {
-             pp.push_back(wch);
-         }
+    if (m_filebrowser.HasSelected())
+    {
+        for (const auto &wch : p)
+        {
+            pp.push_back(wch);
+        }
 
-         if (node->id == nodeIDForFileBrowsing)
-         {
-             node->imagePath = pp;
-         }
-     };*/
+        m_imageViewNode->imagePath = pp;
+    };
 
-    ImGui::TextWrapped(std::format("Path: {}", m_imageViewNode->imagePath).c_str());
-    ed::EndNode();
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::TextWrapped(std::format("{}", m_imageViewNode->imagePath).c_str());
+    }
+}
+
+void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesAfterNodeEnd()
+{
     ed::Suspend();
-    // fileBrowser.Display();
+    m_filebrowser.Display();
     ed::Resume();
 }

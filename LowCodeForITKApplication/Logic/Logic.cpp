@@ -7,8 +7,10 @@
 #include <iostream>
 #include <ranges>
 
+#include "DrawStrategy/BlueprintNodeDrawStarategy.hpp"
 #include "DrawStrategy/ImageReadNodeDrawStrategy.hpp"
 #include "DrawStrategy/ImageViewNodeDrawStrategy.hpp"
+
 #include "Nodes/ImageReadNode/ImageReadNode.hpp"
 #include "Nodes/ImageViewNode/ImageViewNode.hpp"
 
@@ -27,6 +29,12 @@ void Logic::init()
         auto drawStrategy = std::make_unique<ImageReadNodeDrawStrategy>(node.get());
         return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
     };
+
+    // m_nodeCreators["BlueprintNode"] = [&]() {
+    //     auto node         = std::make_unique<BlueprintNodeTest>(m_idProvider.get());
+    //     auto drawStrategy = std::make_unique<BlueprintNodeDrawStrategy>(node.get());
+    //     return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+    // };
 }
 
 void Logic::chainReaction(Pin *outputPin)

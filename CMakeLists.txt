@@ -21,6 +21,8 @@ find_package(imgui-filebrowser REQUIRED)
 # find_package(gtest REQUIRED)
 #---------------------------------------------------------------------------
 
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/LowCodeForITKApplication)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/utils.cmake)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/LowCodeForITKApplication)

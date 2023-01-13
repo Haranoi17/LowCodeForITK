@@ -1,10 +1,10 @@
-#include "DrawStrategy\NodeDrawStrategy.hpp"
+#include "DrawStrategy\BlueprintNodeDrawStarategy.hpp"
 #include "Nodes\ImageViewNode\ImageViewNode.hpp"
 
-struct ImageViewNodeDrawStrategy : public NodeDrawStrategy
+struct ImageViewNodeDrawStrategy : public BlueprintNodeDrawStrategy
 {
     ImageViewNodeDrawStrategy(ImageViewNode *imageViewNode);
-    void draw() override;
+    void nodeSpecificFunctionalitiesBeforeNodeEnd() override;
 
   private:
     ImageViewNode *m_imageViewNode;

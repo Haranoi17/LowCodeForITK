@@ -1,12 +1,19 @@
-#include "DrawStrategy/NodeDrawStrategy.hpp"
+#include "DrawStrategy/BlueprintNodeDrawStarategy.hpp"
 #include "Nodes/ImageReadNode/ImageReadNode.hpp"
 
-struct ImageReadNodeDrawStrategy : public NodeDrawStrategy
+#include "imgui.h"
+
+#include "imgui-filebrowser\imfilebrowser.h"
+
+struct ImageReadNodeDrawStrategy : public BlueprintNodeDrawStrategy
 {
     ImageReadNodeDrawStrategy(ImageReadNode *imageViewNode);
 
-    void draw() override;
+    void nodeSpecificFunctionalitiesBeforeNodeEnd() override;
+    void nodeSpecificFunctionalitiesAfterNodeEnd() override;
 
   private:
     ImageReadNode *m_imageViewNode;
+
+    ImGui::FileBrowser m_filebrowser;
 };

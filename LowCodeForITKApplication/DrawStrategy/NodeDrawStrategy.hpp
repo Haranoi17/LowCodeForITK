@@ -11,6 +11,6 @@ struct NodeDrawStrategy : public DrawStrategy
 
     const IDType nodeToDrawID;
 
-  private:
+  protected:
     Node *m_node;
 };

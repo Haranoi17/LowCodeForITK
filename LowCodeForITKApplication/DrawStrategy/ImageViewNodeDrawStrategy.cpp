@@ -14,15 +14,13 @@
 namespace ed = ax::NodeEditor;
 
 ImageViewNodeDrawStrategy::ImageViewNodeDrawStrategy(ImageViewNode *imageViewNode)
-    : NodeDrawStrategy{imageViewNode}, m_imageViewNode{imageViewNode}
+    : BlueprintNodeDrawStrategy{imageViewNode}, m_imageViewNode{imageViewNode}
 {
 }
 
-void ImageViewNodeDrawStrategy::draw()
+void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 {
     auto textureOperations = TexturesOperationsProxySingleton::instance();
-
-    defaultNodeBegin(m_imageViewNode);
 
     if (m_imageViewNode->imagePin->payload.has_value())
     {
@@ -56,5 +54,4 @@ void ImageViewNodeDrawStrategy::draw()
             m_imageViewNode->texture = nullptr;
         }
     }
-    ed::EndNode();
 }
