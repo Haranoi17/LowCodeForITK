@@ -1,5 +1,5 @@
 #include "ImageReadNode.hpp"
-#include "Pins/ImagePin/ImagePin.hpp"
+#include "Pins/DefinedPins/DefinedPins.hpp"
 
 #include <itkImageFileReader.h>
 

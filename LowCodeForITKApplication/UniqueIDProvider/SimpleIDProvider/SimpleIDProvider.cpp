@@ -3,10 +3,17 @@
 
 IDType SimpleIDProvider::generateID()
 {
-	return ++m_lastId;
+    if (!freeIds.empty())
+    {
+        auto Id = freeIds.top();
+        freeIds.pop();
+        return Id;
+    }
+
+    return ++m_lastId;
 }
 
 void SimpleIDProvider::freeID(IDType id)
 {
-	m_lastId = id;
+    freeIds.push(id);
 }

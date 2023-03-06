@@ -10,7 +10,11 @@ class ImageViewNode : public Node
     using PixelType = ImageReadNode::PixelType;
     using ImageType = ImageReadNode::ImageType;
 
-    ImageViewNode(UniqueIDProvider *idProvider, std::string_view name = "ImageView");
+    inline static std::string typeName = "ImageViewNode";
+    ImageViewNode(UniqueIDProvider *idProvider, std::string_view name = typeName);
+    ImageViewNode() = default;
+
+    void deserialize(json data);
 
     Pin *imagePin;
 

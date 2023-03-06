@@ -24,7 +24,7 @@ void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
     if (m_imageViewNode->imagePin->payload.has_value())
     {
-        if (!m_imageViewNode->texture)
+        if (!m_imageViewNode->texture || m_node->dirty)
         {
             std::string fileName{std::format("ImageViewNode{}Preview.png", m_imageViewNode->id)};
             auto image = std::any_cast<itk::SmartPointer<ImageViewNode::ImageType>>(m_imageViewNode->imagePin->payload);
@@ -40,6 +40,7 @@ void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
                 m_imageViewNode->texture =
                     textureOperations->CreateTexture(data, m_imageViewNode->width, m_imageViewNode->height);
             }
+            m_node->dirty = false;
         }
         else
         {

@@ -1,16 +1,42 @@
 #include "LowCodeForITKApplication.hpp"
 #include "TexturesOperationsProxySingleton.hpp"
 #include <algorithm>
+#include <fstream>
+
+std::string serializationFileName = "serialization.json";
+
+void LowCodeForITKApplication::serialize()
+{
+    std::ofstream fstream;
+    fstream.open(serializationFileName);
+    fstream << m_logic.serialize();
+    fstream.close();
+}
+
+void LowCodeForITKApplication::deserialize()
+{
+    json json;
+
+    std::ifstream fstream;
+    fstream.open(serializationFileName);
+    if (fstream.is_open())
+    {
+        fstream >> json;
+        m_logic.deserialize(json);
+        m_logic.updateCreators();
+        fstream.close();
+    }
+}
 
 void LowCodeForITKApplication::OnStart()
 {
-    ed::Config config;
-    config.SettingsFile = "LowCodeForITKApplication.json";
-    m_Context           = ed::CreateEditor(&config);
+    m_logic.updateCreators();
 
-    TexturesOperationsProxySingleton::instance(this); // set this application as proxys operator
+    m_config.SettingsFile = settingsFile;
 
-    m_logic.init();
+    m_Context = ed::CreateEditor(&m_config);
+
+    TexturesOperationsProxySingleton::instance(this);
 }
 
 void LowCodeForITKApplication::OnStop()
@@ -23,6 +49,21 @@ void LowCodeForITKApplication::buttonForTriggeringEvaluation()
     if (ImGui::Button("TriggerEvaluationButton", ImVec2{200, 40}))
     {
         m_logic.propagateEvaluationThroughTheNodes();
+    }
+}
+
+void LowCodeForITKApplication::ButtonForSaving()
+{
+    if (ImGui::Button("save", ImVec2{100, 20}))
+    {
+        serialize();
+    }
+}
+void LowCodeForITKApplication::ButtonForLoading()
+{
+    if (ImGui::Button("load", ImVec2{100, 20}))
+    {
+        deserialize();
     }
 }
 
@@ -66,6 +107,8 @@ void LowCodeForITKApplication::drawMenu()
     ImGui::Begin("menu");
     buttonForTriggeringEvaluation();
     buttonForNodesModal();
+    ButtonForSaving();
+    ButtonForLoading();
 
     ImGuiDemoModal();
 
@@ -97,11 +140,11 @@ void LowCodeForITKApplication::buttonForNodesModal()
     if (ImGui::BeginPopupModal("NodesDrawerModal"))
     {
 
-        for (auto [nodeName, nodeWithDrawStrategyCreator] : m_logic.m_nodeCreators)
+        for (auto [nodeType, createNodeWithDrawStrategy] : m_logic.m_nodeCreators)
         {
-            if (ImGui::Button(nodeName.c_str()))
+            if (ImGui::Button(nodeType.c_str()))
             {
-                auto nodeWithDrawStrategy = nodeWithDrawStrategyCreator();
+                auto nodeWithDrawStrategy = createNodeWithDrawStrategy();
                 m_logic.addNode(std::move(nodeWithDrawStrategy->node));
                 m_logic.addNodeDrawStrategy(std::move(nodeWithDrawStrategy->drawStrategy));
                 ImGui::CloseCurrentPopup();

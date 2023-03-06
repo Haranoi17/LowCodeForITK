@@ -26,6 +26,7 @@ target_include_directories(${TargetName} PRIVATE
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/stb_image
     ${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/
     ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
+    ${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include
 )
 
 if(MSVC)

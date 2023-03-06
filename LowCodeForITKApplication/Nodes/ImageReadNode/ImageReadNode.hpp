@@ -9,9 +9,17 @@ class ImageReadNode : public Node
     using PixelType = itk::RGBAPixel<unsigned char>;
     using ImageType = itk::Image<PixelType, 2>;
 
-    ImageReadNode(UniqueIDProvider *idProvider, std::string_view name = "ReadImage");
+    inline static std::string typeName = "ImageReadNode";
+    ImageReadNode(UniqueIDProvider *idProvider, std::string_view name = typeName);
+    ImageReadNode() = default;
 
     void populateOutputPins() override;
+
+    void deserialize(json data) override
+    {
+        Node::deserialize(data);
+        imagePin = m_outputPins.back().get();
+    }
 
     std::string imagePath;
 

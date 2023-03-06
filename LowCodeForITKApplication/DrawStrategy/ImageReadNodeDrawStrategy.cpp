@@ -32,15 +32,20 @@ void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
         m_imageViewNode->imagePath = pp;
     };
-
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::TextWrapped(std::format("{}", m_imageViewNode->imagePath).c_str());
-    }
 }
 
 void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesAfterNodeEnd()
 {
+    if (ImGui::IsItemHovered())
+    {
+        const auto min = ImGui::GetItemRectMin();
+        const auto max = ImGui::GetItemRectMax();
+
+        const auto writeTextPosition = ImVec2{min.x, max.y};
+        ImGui::SetCursorPos(writeTextPosition);
+        ImGui::TextWrapped(std::format("{}", m_imageViewNode->imagePath).c_str());
+    }
+
     ed::Suspend();
     m_filebrowser.Display();
     ed::Resume();

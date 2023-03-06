@@ -15,6 +15,10 @@ include( ${ITK_USE_FILE} )
 # find_package(imgui-node-editor REQUIRED)
 #---------------------------------------------------------------------------
 
+#nlohmann json--------------------------------------------------------------
+find_package(nlohmann_json)
+#---------------------------------------------------------------------------
+
 find_package(imgui_node_editor REQUIRED)
 find_package(imgui-filebrowser REQUIRED)
 #gtest----------------------------------------------------------------------

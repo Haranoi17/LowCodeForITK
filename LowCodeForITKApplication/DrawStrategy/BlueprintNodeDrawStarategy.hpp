@@ -17,6 +17,7 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
     virtual void drawOutputPins();
     virtual void nodeSpecificFunctionalitiesBeforeNodeEnd();
     virtual void nodeSpecificFunctionalitiesAfterNodeEnd();
+    virtual void pushImguiVariables();
 
     ax::NodeEditor::Utilities::BlueprintNodeBuilder m_nodeBuilder;
 };

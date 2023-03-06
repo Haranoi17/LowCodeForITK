@@ -1,8 +1,9 @@
 #pragma once
+#include <Serializeable.hpp>
 
 using IDType = unsigned;
 
-class UniqueIDProvider
+class UniqueIDProvider : public Serializable
 {
   public:
     virtual ~UniqueIDProvider()      = default;

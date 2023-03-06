@@ -1,14 +1,47 @@
 #pragma once
 #include "UniqueIDProvider/Interface/UniqueIDProvider.hpp"
 
+#include <algorithm>
+#include <ranges>
+#include <stack>
 #include <vector>
 
 class SimpleIDProvider final : public UniqueIDProvider
 {
-public:
-	IDType generateID() override;
-	void freeID(IDType id) override;
+  public:
+    json serialize() override
+    {
+        json serializedIdProvider;
+        serializedIdProvider["lastId"] = m_lastId;
 
-private:
-	IDType m_lastId{ 0 };
+        if (freeIds.size())
+        {
+            IDType             *end   = &freeIds.top() + 1;
+            IDType             *begin = end - freeIds.size();
+            std::vector<IDType> freeIdsAsVector(begin, end);
+            for (auto id : freeIdsAsVector)
+            {
+                serializedIdProvider["freeIds"].push_back(id);
+            }
+        }
+
+        return serializedIdProvider;
+    }
+
+    void deserialize(json data) override
+    {
+        m_lastId = data["lastId"];
+
+        for (auto id : data["freeIds"])
+        {
+            freeIds.push(id);
+        }
+    }
+
+    IDType generateID() override;
+    void   freeID(IDType id) override;
+
+  private:
+    IDType             m_lastId{0};
+    std::stack<IDType> freeIds;
 };

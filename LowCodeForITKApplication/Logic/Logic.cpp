@@ -10,31 +10,49 @@
 #include "DrawStrategy/BlueprintNodeDrawStarategy.hpp"
 #include "DrawStrategy/ImageReadNodeDrawStrategy.hpp"
 #include "DrawStrategy/ImageViewNodeDrawStrategy.hpp"
+#include "DrawStrategy/RGBANodeDrawStrategy.hpp"
 
 #include "Nodes/ImageReadNode/ImageReadNode.hpp"
 #include "Nodes/ImageViewNode/ImageViewNode.hpp"
+#include "Nodes/RGBANode/RGBANode.hpp"
 
-void Logic::init()
+std::map<std::string, std::function<std::unique_ptr<Node>()>> Logic::nodeTypeNameToFactoryMethodMap{
+    {RGBANode::typeName, []() { return std::make_unique<RGBANode>(); }},
+    {ImageReadNode::typeName, []() { return std::make_unique<ImageReadNode>(); }},
+    {ImageViewNode::typeName, []() { return std::make_unique<ImageViewNode>(); }}};
+
+std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>> Logic::nodeTypeNameToDrawStrategyMap{
+    {RGBANode::typeName,
+     [](Node *nodePtr) { return std::make_unique<RGBANodeDrawStrategy>(dynamic_cast<RGBANode *>(nodePtr)); }},
+    {ImageReadNode::typeName,
+     [](Node *nodePtr) { return std::make_unique<ImageReadNodeDrawStrategy>(dynamic_cast<ImageReadNode *>(nodePtr)); }},
+    {ImageViewNode::typeName, [](Node *nodePtr) {
+         return std::make_unique<ImageViewNodeDrawStrategy>(dynamic_cast<ImageViewNode *>(nodePtr));
+     }}};
+
+Logic::Logic() : m_idProvider{std::make_unique<SimpleIDProvider>()}
 {
-    m_idProvider = std::make_unique<SimpleIDProvider>();
+}
 
-    m_nodeCreators["ImageView"] = [&]() {
+void Logic::updateCreators()
+{
+    m_nodeCreators[ImageViewNode::typeName] = [&]() {
         auto node         = std::make_unique<ImageViewNode>(m_idProvider.get());
         auto drawStrategy = std::make_unique<ImageViewNodeDrawStrategy>(node.get());
         return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
     };
 
-    m_nodeCreators["ImageRead"] = [&]() {
+    m_nodeCreators[ImageReadNode::typeName] = [&]() {
         auto node         = std::make_unique<ImageReadNode>(m_idProvider.get());
         auto drawStrategy = std::make_unique<ImageReadNodeDrawStrategy>(node.get());
         return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
     };
 
-    // m_nodeCreators["BlueprintNode"] = [&]() {
-    //     auto node         = std::make_unique<BlueprintNodeTest>(m_idProvider.get());
-    //     auto drawStrategy = std::make_unique<BlueprintNodeDrawStrategy>(node.get());
-    //     return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    // };
+    m_nodeCreators[RGBANode::typeName] = [&]() {
+        auto node         = std::make_unique<RGBANode>(m_idProvider.get());
+        auto drawStrategy = std::make_unique<RGBANodeDrawStrategy>(node.get());
+        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+    };
 }
 
 void Logic::chainReaction(Pin *outputPin)
@@ -166,6 +184,121 @@ void Logic::deleteNode(IDType nodeId)
 const std::vector<std::unique_ptr<LinkInfo>> &Logic::getLinks()
 {
     return m_links;
+}
+
+json Logic::serialize()
+{
+    json serializedLogic;
+
+    serializedLogic["idProvider"] = m_idProvider->serialize();
+    serializedLogic["links"]      = serializeLinks();
+    serializedLogic["nodes"]      = serializeNodes();
+    return serializedLogic;
+}
+
+std::vector<IDType> recursiveSearch(const json &json)
+{
+    std::vector<IDType> ids;
+    for (const auto &subJson : json)
+    {
+        if (subJson.contains("id"))
+        {
+            ids.emplace_back(subJson["id"]);
+        }
+
+        if (subJson.is_structured())
+        {
+            auto found = recursiveSearch(subJson);
+            ids.reserve(ids.size() + std::distance(found.begin(), found.end()));
+            ids.insert(ids.end(), found.begin(), found.end());
+        }
+    }
+
+    return ids;
+}
+void Logic::deserialize(json data)
+{
+    clearAll();
+    deserializeNodes(data["nodes"]);
+    deserializeLinks(data["links"]);
+
+    updatePinsAfterDeserialization();
+
+    m_idProvider = std::make_unique<SimpleIDProvider>();
+    m_idProvider->deserialize(data["idProvider"]);
+}
+
+json Logic::serializeLinks()
+{
+    json serializedLinks;
+    std::ranges::for_each(
+        getLinks(), [&](const std::unique_ptr<LinkInfo> &link) { serializedLinks.emplace_back(link->serialize()); });
+
+    return serializedLinks;
+}
+
+json Logic::serializeNodes()
+{
+    json serializedNodes;
+    std::ranges::for_each(getNodes(),
+                          [&](const std::unique_ptr<Node> &node) { serializedNodes.emplace_back(node->serialize()); });
+    return serializedNodes;
+}
+
+void Logic::deserializeLinks(json links)
+{
+    for (auto link : links)
+    {
+        auto linkObject = std::make_unique<LinkInfo>();
+        linkObject->deserialize(link);
+
+        m_links.emplace_back(std::move(linkObject));
+    }
+}
+
+void Logic::deserializeNodes(json nodes)
+{
+    for (auto nodeData : nodes)
+    {
+        std::string nodeTypeName = nodeData["name"];
+        auto        node         = nodeTypeNameToFactoryMethodMap.at(nodeTypeName)();
+        node->deserialize(nodeData);
+
+        auto drawStrategy = nodeTypeNameToDrawStrategyMap.at(nodeTypeName)(node.get());
+
+        addNode(std::move(node));
+        addNodeDrawStrategy(std::move(drawStrategy));
+    }
+}
+
+void Logic::updatePinsAfterDeserialization()
+{
+    auto        pins  = collectAllPins();
+    const auto &links = getLinks();
+
+    std::ranges::for_each(pins, [&](Pin *currentPin) {
+        auto isCurrentPinInLink = [&](const std::unique_ptr<LinkInfo> &link) {
+            return currentPin->id == link->pinIds.first || currentPin->id == link->pinIds.second;
+        };
+        auto linksWithThisPin = links | std::views::filter(isCurrentPinInLink);
+
+        auto updateCurrentPinConncetedPins = [&](const std::unique_ptr<LinkInfo> &link) {
+            auto otherPinId = currentPin->id == link->pinIds.first ? link->pinIds.second : link->pinIds.first;
+            auto otherPin   = getPinById(otherPinId);
+
+            auto isPinInVector = [](std::vector<Pin *> pins, Pin *pin) {
+                return std::ranges::any_of(pins, [&](Pin *pinFromVector) { return pin == pinFromVector; });
+            };
+
+            if (!isPinInVector(currentPin->connectedPins, otherPin))
+            {
+                currentPin->connectedPins.push_back(otherPin);
+            }
+        };
+
+        std::ranges::for_each(linksWithThisPin, updateCurrentPinConncetedPins);
+        currentPin->parentNode = getNodeWithPin(currentPin->id).get();
+    });
 }
 
 const std::vector<std::unique_ptr<NodeDrawStrategy>> &Logic::getNodesDrawStrategies()

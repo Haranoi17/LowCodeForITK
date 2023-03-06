@@ -17,6 +17,11 @@ struct LowCodeForITKApplication : public Application
     void OnStop() override;
 
     void buttonForTriggeringEvaluation();
+    void ButtonForSaving();
+    void ButtonForLoading();
+
+    void serialize();
+    void deserialize();
 
     void OnFrame(float deltaTime) override;
 
@@ -39,5 +44,7 @@ struct LowCodeForITKApplication : public Application
     bool                           m_FirstFrame = true;    // Flag set for first frame only, some action need
                                                            // to be executed once.
 
-    Logic m_logic;
+    Logic                    m_logic;
+    ed::Config               m_config;
+    inline static const auto settingsFile = "LowCodeForITKApplication.json";
 };

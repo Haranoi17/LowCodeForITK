@@ -33,6 +33,8 @@ void BlueprintNodeDrawStrategy::draw()
 
     m_nodeBuilder.Begin(m_node->id);
 
+    pushImguiVariables();
+
     drawHeader();
 
     drawInputPins();
@@ -86,6 +88,12 @@ void BlueprintNodeDrawStrategy::drawHeader()
 
 void BlueprintNodeDrawStrategy::drawInputPins()
 {
+    DEBUG_RECTANGLE();
+    if (const auto noInputPins = !m_node->m_inputPins.size(); noInputPins)
+    {
+        auto size = ImGui::GetItemRectSize();
+        ImGui::Dummy(ImVec2{size.x / 2.0f, 0.0f});
+    }
     for (const auto &inputPin : m_node->m_inputPins)
     {
         auto isConnected = !inputPin->connectedPins.empty();
@@ -134,4 +142,9 @@ void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
 void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesAfterNodeEnd()
 {
+}
+
+void BlueprintNodeDrawStrategy::pushImguiVariables()
+{
+    ImGui::PushItemWidth(200);
 }
