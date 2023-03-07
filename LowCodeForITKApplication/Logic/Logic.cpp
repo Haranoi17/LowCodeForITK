@@ -89,11 +89,8 @@ void Logic::propagateEvaluationThroughTheNodes()
                                     [&](const std::unique_ptr<Node> &node) { return isNodeAnInput(node.get()); });
 
     cleanNonInputNodesPins();
-    std::cout << "Evaluation: Started\n\n";
 
     std::ranges::for_each(inputNodes, startChainReaction);
-
-    std::cout << "Evaluation: Finished\n\n";
 }
 
 bool Logic::isLinkPossible(std::pair<IDType, IDType> pinIdPair)
@@ -173,12 +170,12 @@ void Logic::deleteNode(IDType nodeId)
 
     std::ranges::for_each(nodeLinks, [&](LinkInfo *linkInfo) { deleteLink(linkInfo->id); });
 
-    auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(m_nodes, node->id, &Node::id);
     auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] =
         std::ranges::remove(m_drawNodeStrategies, node->id, &NodeDrawStrategy::nodeToDrawID);
-
-    m_nodes.erase(beginRemoveNodes, endRemoveNodes);
     m_drawNodeStrategies.erase(beginRemoveDrawStrategy, endRemoveDrawStrategy);
+
+    auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(m_nodes, node->id, &Node::id);
+    m_nodes.erase(beginRemoveNodes, endRemoveNodes);
 }
 
 const std::vector<std::unique_ptr<LinkInfo>> &Logic::getLinks()
@@ -311,8 +308,6 @@ Pin *Logic::getPinById(IDType id) const
     auto ptrs = collectAllPins();
     auto it   = std::find_if(std::begin(ptrs), std::end(ptrs), [&](const Pin *pin) { return pin->id == id; });
 
-    assert(it != std::end(ptrs), "Drawing representation data missmatch FATAL!!!");
-
     return *it;
 }
 
@@ -379,7 +374,7 @@ const std::unique_ptr<Node> &Logic::getNodeWithPin(IDType pinId) const
     auto it = std::ranges::find_if(m_nodes, [&](const std::unique_ptr<Node> &node) {
         return std::ranges::any_of(getPinsOnNode(node.get()), [&](const Pin *pin) { return pin->id == pinId; });
     });
-    assert(it != std::end(m_nodes), "PIN NOT CONNECTED TO NODE FATAL ERROR!!!");
+
     return *it;
 }
 
@@ -398,8 +393,6 @@ const LinkInfo *Logic::getLinkInfoById(IDType linkId) const
 {
     auto it = std::ranges::find_if(m_links,
                                    [&](const std::unique_ptr<LinkInfo> &linkInfo) { return linkInfo->id == linkId; });
-
-    assert(it != std::end(m_links), "Drawing representation data missmatch FATAL!!!");
 
     return it->get();
 }
@@ -435,5 +428,5 @@ std::vector<Pin *> Logic::collectAllPins() const
 
 bool Logic::isNodeAnInput(const Node *node) const
 {
-    return !node->m_inputPins.size();
+    return node->m_inputPins.empty();
 }

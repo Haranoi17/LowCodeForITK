@@ -24,6 +24,7 @@ void LowCodeForITKApplication::deserialize()
         fstream >> json;
         m_logic.deserialize(json);
         m_logic.updateCreators();
+        m_logic.propagateEvaluationThroughTheNodes();
         fstream.close();
     }
 }

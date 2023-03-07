@@ -15,10 +15,19 @@ class ImageReadNode : public Node
 
     void populateOutputPins() override;
 
+    json serialize() override
+    {
+        json serializedImageReadNode         = Node::serialize();
+        serializedImageReadNode["imagePath"] = imagePath;
+        return serializedImageReadNode;
+    }
+
     void deserialize(json data) override
     {
         Node::deserialize(data);
-        imagePin = m_outputPins.back().get();
+        imagePath = data["imagePath"];
+
+        imagePin = m_outputPins.back().get(); // this is baaaaad...
     }
 
     std::string imagePath;
