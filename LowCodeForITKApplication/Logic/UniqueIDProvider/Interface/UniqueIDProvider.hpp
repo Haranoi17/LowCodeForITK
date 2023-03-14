@@ -1,8 +1,6 @@
 #pragma once
 #include <Serializeable.hpp>
 
-using IDType = unsigned;
-
 class UniqueIDProvider : public Serializable
 {
   public:

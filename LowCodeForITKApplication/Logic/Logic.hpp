@@ -12,30 +12,6 @@
 #include <functional>
 #include <utility>
 
-struct LinkInfo : Serializable
-{
-    LinkInfo(IDType id, std::pair<IDType, IDType> pins) : id{id}, pinIds{pins}
-    {
-    }
-    LinkInfo() = default;
-    IDType                    id;
-    std::pair<IDType, IDType> pinIds;
-
-    json serialize() override
-    {
-        json serializedLinkInfo;
-        serializedLinkInfo["id"]     = id;
-        serializedLinkInfo["pinIds"] = pinIds;
-        return serializedLinkInfo;
-    }
-
-    void deserialize(json data) override
-    {
-        id     = data["id"];
-        pinIds = data["pinIds"];
-    }
-};
-
 struct NodeWithDrawStrategy
 {
     std::unique_ptr<Node>             node;

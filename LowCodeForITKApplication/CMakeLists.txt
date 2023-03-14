@@ -1,13 +1,24 @@
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-file(GLOB_RECURSE sources *.cpp *.hpp *.h)
+file(GLOB_RECURSE sources *.cpp)
+file(GLOB_RECURSE headers *.hpp *.h)
 
 set(TargetName ${PROJECT_NAME}Application)
 
-add_executable(${TargetName} ${sources})
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${sources})
+add_executable(${TargetName} ${sources} ${headers})
 
 target_link_libraries(${TargetName} PRIVATE 
     imgui_node_editor::imgui_node_editor 
@@ -18,6 +29,7 @@ target_link_libraries(${TargetName} PRIVATE
     ${ITK_LIBRARIES}
 )
 
+SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${TargetName} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/
     ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui_node_editor
@@ -27,6 +39,7 @@ target_include_directories(${TargetName} PRIVATE
     ${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/
     ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
     ${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include
+    ${SUBDIRS}
 )
 
 if(MSVC)
