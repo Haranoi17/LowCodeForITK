@@ -13,3 +13,6 @@
 [submodule "externals/range-v3"]
 	path = externals/range-v3
 	url = https://github.com/ericniebler/range-v3.git
+[submodule "externals/json"]
+	path = externals/json
+	url = https://github.com/nlohmann/json.git

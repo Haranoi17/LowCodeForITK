@@ -11,5 +11,7 @@ NodeDrawStrategy::NodeDrawStrategy(Node *node) : node{node}, nodeToDrawID{node->
 void NodeDrawStrategy::draw()
 {
     defaultNodeBegin(node);
+    auto pos = ed::GetNodePosition(node->id);
+    node->setPosition(Position{pos.x, pos.y});
     ed::EndNode();
 }

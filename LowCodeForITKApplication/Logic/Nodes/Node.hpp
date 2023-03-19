@@ -3,11 +3,13 @@
 #include <vector>
 
 #include "Logic/Interfaces/Identifiable.hpp"
+#include "Logic/Interfaces/Positionable.hpp"
 #include "Logic/Interfaces/Serializeable.hpp"
+
 #include "Logic/Pins/Pin.hpp"
 #include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
-class Node : public Serializable
+class Node : public Serializable, public Positionable
 {
   public:
     Node(UniqueIDProvider *idProvider, std::string_view name = "NodeBase") : id{idProvider->generateID()}, name{name}
@@ -19,6 +21,9 @@ class Node : public Serializable
     virtual void calculate();
     virtual void populateOutputPins();
 
+    void     setPosition(Position pos) override;
+    Position getPosition() const override;
+
     json serialize() override;
     void deserialize(json data) override;
 
@@ -29,5 +34,6 @@ class Node : public Serializable
     bool                              dirty{true};
 
   private:
+    Position                          position{};
     std::vector<std::unique_ptr<Pin>> deserializePins(json pinsData);
 };

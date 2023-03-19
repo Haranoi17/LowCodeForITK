@@ -17,7 +17,7 @@ class ImageViewNode : public Node
 
     void calculate() override;
 
-    void deserialize(json data);
+    void deserialize(json data) override;
 
     Pin *imagePin;
 

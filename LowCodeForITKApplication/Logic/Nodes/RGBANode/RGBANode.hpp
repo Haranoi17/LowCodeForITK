@@ -15,21 +15,14 @@ class RGBANode : public Node
     RGBANode() = default;
     RGBANode(UniqueIDProvider *idProvider, std::string_view name = typeName);
 
-    void populateOutputPins() override
-    {
-        rgbaPin->payload = rgbaValues;
-    }
+    void populateOutputPins() override;
 
-    void deserialize(json data) override
-    {
-        Node::deserialize(data);
+    json serialize() override;
+    void deserialize(json data) override;
 
-        rgbaPin = outputPins.back().get();
-    }
+    Pin *rgbaPin{};
 
-    Pin *rgbaPin;
-
-    PixelType rgbaValues;
+    PixelType rgbaValues{};
 };
 
 class PercentageNode : public Node
@@ -45,14 +38,11 @@ class PercentageNode : public Node
         percentagePin->payload = percentage;
     }
 
-    void deserialize(json data)
-    {
-        Node::deserialize(data);
-        percentagePin = outputPins.back().get();
-    }
+    json serialize() override;
+    void deserialize(json data);
 
-    Pin  *percentagePin;
-    float percentage;
+    Pin  *percentagePin{};
+    float percentage{};
 };
 
 class TintNode : public Node
@@ -78,11 +68,11 @@ class TintNode : public Node
         processedImagePin = outputPins.back().get();
     }
 
-    Pin *percentagePin;
-    Pin *colorPin;
-    Pin *imagePin;
-    Pin *processedImagePin;
+    Pin *percentagePin{};
+    Pin *colorPin{};
+    Pin *imagePin{};
+    Pin *processedImagePin{};
 
   private:
-    itk::SmartPointer<ImageType> processedImage;
+    itk::SmartPointer<ImageType> processedImage{};
 };

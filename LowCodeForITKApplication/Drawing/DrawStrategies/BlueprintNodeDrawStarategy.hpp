@@ -9,7 +9,7 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
 
     void draw() override;
 
-  protected:
+  private:
     virtual void setStyleVariables();
     virtual void unsetStyleVariables();
     virtual void drawHeader();
@@ -18,6 +18,9 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
     virtual void nodeSpecificFunctionalitiesBeforeNodeEnd();
     virtual void nodeSpecificFunctionalitiesAfterNodeEnd();
     virtual void pushImguiVariables();
+
+    void synchronizeLogicalNodePositionToEditor();
+    void setDeserializedPositionInEditior();
 
     ax::NodeEditor::Utilities::BlueprintNodeBuilder nodeBuilder;
 };

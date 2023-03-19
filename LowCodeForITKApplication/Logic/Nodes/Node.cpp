@@ -11,12 +11,25 @@ void Node::populateOutputPins()
 {
 }
 
+void Node::setPosition(Position pos)
+{
+    position = pos;
+}
+
+Position Node::getPosition() const
+{
+    return position;
+}
+
 json Node::serialize()
 {
     json serializedNode;
 
     serializedNode["id"]   = id;
     serializedNode["name"] = name;
+    serializedNode["posX"] = position.x;
+    serializedNode["posY"] = position.y;
+
     std::ranges::for_each(inputPins, [&](const auto &pin) { serializedNode["inputPins"].push_back(pin->serialize()); });
     std::ranges::for_each(outputPins,
                           [&](const auto &pin) { serializedNode["outputPins"].push_back(pin->serialize()); });
@@ -26,8 +39,9 @@ json Node::serialize()
 
 void Node::deserialize(json data)
 {
-    id   = data["id"];
-    name = data["name"];
+    id       = data["id"];
+    name     = data["name"];
+    position = Position{data["posX"], data["posY"]};
 
     inputPins  = deserializePins(data["inputPins"]);
     outputPins = deserializePins(data["outputPins"]);

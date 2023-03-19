@@ -16,6 +16,7 @@ namespace util = ax::NodeEditor::Utilities;
 
 BlueprintNodeDrawStrategy::BlueprintNodeDrawStrategy(Node *testNode) : NodeDrawStrategy{testNode}
 {
+    setDeserializedPositionInEditior();
 }
 
 void BlueprintNodeDrawStrategy::draw()
@@ -142,9 +143,22 @@ void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
 void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesAfterNodeEnd()
 {
+    synchronizeLogicalNodePositionToEditor();
 }
 
 void BlueprintNodeDrawStrategy::pushImguiVariables()
 {
     ImGui::PushItemWidth(200);
+}
+
+void BlueprintNodeDrawStrategy::setDeserializedPositionInEditior()
+{
+    auto deserializedPosition = node->getPosition();
+    ed::SetNodePosition(node->id, ImVec2{deserializedPosition.x, deserializedPosition.y});
+}
+
+void BlueprintNodeDrawStrategy::synchronizeLogicalNodePositionToEditor()
+{
+    auto positionInEditor = ed::GetNodePosition(node->id);
+    node->setPosition(Position{positionInEditor.x, positionInEditor.y});
 }
