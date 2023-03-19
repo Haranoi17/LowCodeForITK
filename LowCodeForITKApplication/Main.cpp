@@ -1,4 +1,4 @@
-#include "LowCodeForITKApplication.hpp"
+#include "Application/LowCodeForITKApplication.hpp"
 
 int Main(int argc, char **argv)
 {

@@ -4,21 +4,21 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "DrawStrategy/NodeDrawStrategy.hpp"
-#include "Nodes/Interface/Node.hpp"
-#include "UniqueIDProvider/Interface/UniqueIDProvider.hpp"
-#include <functional>
-#include <utility>
+#include "Drawing/DrawStrategies/NodeDrawStrategy.hpp"
+#include "Logic/Links/Link.hpp"
+#include "Logic/Nodes/Node.hpp"
+#include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
+
+#include <nlohmann\json.hpp>
 
 struct NodeWithDrawStrategy
 {
     std::unique_ptr<Node>             node;
     std::unique_ptr<NodeDrawStrategy> drawStrategy;
 };
-
-#include <nlohmann\json.hpp>
 
 class Logic : public Serializable
 {
@@ -38,12 +38,12 @@ class Logic : public Serializable
     void addNode(std::unique_ptr<Node> newNode);
     void addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy);
 
-    const std::vector<std::unique_ptr<NodeDrawStrategy>> &getNodesDrawStrategies();
-    const std::vector<std::unique_ptr<LinkInfo>>         &getLinks();
-    const std::vector<std::unique_ptr<Node>>             &getNodes()
-    {
-        return m_nodes;
-    }
+    bool innerNodesStateChanged() const;
+    void removeDirtyFlagsFromNodes();
+
+    std::vector<NodeDrawStrategy *> getNodesDrawStrategies() const;
+    std::vector<LinkInfo *>         getLinks() const;
+    std::vector<Node *>             getNodes() const;
 
     std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> m_nodeCreators;
 
@@ -60,20 +60,18 @@ class Logic : public Serializable
 
     json serializeNodes();
 
-    void deserializeLinks(json links);
+    void deserializeLinks(json serializedLinks);
 
-    void deserializeNodes(json nodes);
+    void deserializeNodes(json serializedNodes);
 
     void updatePinsAfterDeserialization();
 
-    std::vector<LinkInfo *> getPinLinks(Pin *pin) const;
+    std::vector<LinkInfo *> getPinLinks(const Pin *pin) const;
     Pin                    *getPinById(IDType id) const;
     Node                   *getNodeById(IDType id) const;
 
-    bool isPinOnNode(const Node *node, const Pin *pin) const;
     bool isNodeAnInput(const Node *node) const;
     bool arePinsOnSameNode(const Pin *first, const Pin *second) const;
-    bool areNodesConnected(const Node *first, const Node *second) const;
     bool arePinsAlreadyConnected(const Pin *first, const Pin *second) const;
 
     bool isInputPin(const Pin *pin) const;
@@ -86,16 +84,10 @@ class Logic : public Serializable
 
     void cleanNonInputNodesPins();
 
-    void clearAll()
-    {
-        m_links.clear();
-        m_nodes.clear();
-        m_drawNodeStrategies.clear();
-        m_idProvider.reset();
-    }
+    void clearAll();
 
-    std::vector<std::unique_ptr<LinkInfo>>         m_links;
-    std::vector<std::unique_ptr<Node>>             m_nodes;
-    std::vector<std::unique_ptr<NodeDrawStrategy>> m_drawNodeStrategies;
-    std::unique_ptr<UniqueIDProvider>              m_idProvider;
+    std::vector<std::unique_ptr<LinkInfo>>         links;
+    std::vector<std::unique_ptr<Node>>             nodes;
+    std::vector<std::unique_ptr<NodeDrawStrategy>> nodeDrawStrategies;
+    std::unique_ptr<UniqueIDProvider>              idProvider;
 };

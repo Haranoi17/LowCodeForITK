@@ -1,5 +1,5 @@
 #pragma once
-#include "Pins/Interface/Pin.hpp"
+#include "Logic/Pins/Pin.hpp"
 
 #define NewPinType(NAME, NAME_STR)                                                             \
     struct NAME : public Pin                                                                   \
@@ -14,7 +14,9 @@
 
 NewPinType(ImagePin, "ImagePin");
 NewPinType(RGBAPin, "RGBAPin");
+NewPinType(PercentagePin, "PercentagePin");
 
 inline std::map<std::string, std::function<std::unique_ptr<Pin>()>> typeNameToPinObject{
     {ImagePin::typeName, []() { return std::make_unique<ImagePin>(); }},
-    {RGBAPin::typeName, []() { return std::make_unique<RGBAPin>(); }}};
+    {RGBAPin::typeName, []() { return std::make_unique<RGBAPin>(); }},
+    {PercentagePin::typeName, []() { return std::make_unique<PercentagePin>(); }}};

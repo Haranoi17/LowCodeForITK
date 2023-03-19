@@ -1,5 +1,5 @@
-#include "DrawStrategy\BlueprintNodeDrawStarategy.hpp"
-#include "Nodes\ImageViewNode\ImageViewNode.hpp"
+#include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
+#include "Logic/Nodes/ImageViewNode/ImageViewNode.hpp"
 
 struct ImageViewNodeDrawStrategy : public BlueprintNodeDrawStrategy
 {
@@ -7,5 +7,7 @@ struct ImageViewNodeDrawStrategy : public BlueprintNodeDrawStrategy
     void nodeSpecificFunctionalitiesBeforeNodeEnd() override;
 
   private:
-    ImageViewNode *m_imageViewNode;
+    ImageViewNode *imageViewNode;
+
+    ImTextureID textureId{};
 };

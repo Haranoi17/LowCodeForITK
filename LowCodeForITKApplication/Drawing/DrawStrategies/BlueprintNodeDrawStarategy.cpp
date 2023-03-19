@@ -1,15 +1,15 @@
 #include "BlueprintNodeDrawStarategy.hpp"
 
-#include "DrawDefaults.hpp"
+#include "Drawing/DrawDefaults.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
 
 #include "imgui_node_editor.h"
 #include <format>
 
-#include "DrawStrategy\blueprints\builders.h"
-#include "TexturesAccessorSingleton.hpp"
-#include "blueprints\widgets.h"
+#include "Application/TexturesAccessorSingleton.hpp"
+#include "Drawing/blueprints/builders.h"
+#include "Drawing/blueprints/widgets.h"
 
 namespace ed   = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
@@ -25,13 +25,13 @@ void BlueprintNodeDrawStrategy::draw()
 
     auto nodeHeaderTexture = texturesAccessor->getNodeHeaderTexture();
 
-    m_nodeBuilder = util::BlueprintNodeBuilder(nodeHeaderTexture,
-                                               texturesOperations->GetTextureWidth(nodeHeaderTexture),
-                                               texturesOperations->GetTextureHeight(nodeHeaderTexture));
+    nodeBuilder = util::BlueprintNodeBuilder(nodeHeaderTexture,
+                                             texturesOperations->GetTextureWidth(nodeHeaderTexture),
+                                             texturesOperations->GetTextureHeight(nodeHeaderTexture));
 
     setStyleVariables();
 
-    m_nodeBuilder.Begin(m_node->id);
+    nodeBuilder.Begin(node->id);
 
     pushImguiVariables();
 
@@ -39,13 +39,13 @@ void BlueprintNodeDrawStrategy::draw()
 
     drawInputPins();
 
-    m_nodeBuilder.Middle();
+    nodeBuilder.Middle();
 
     drawOutputPins();
 
     nodeSpecificFunctionalitiesBeforeNodeEnd();
 
-    m_nodeBuilder.End();
+    nodeBuilder.End();
 
     nodeSpecificFunctionalitiesAfterNodeEnd();
 
@@ -78,26 +78,26 @@ void BlueprintNodeDrawStrategy::unsetStyleVariables()
 
 void BlueprintNodeDrawStrategy::drawHeader()
 {
-    m_nodeBuilder.Header(ImColor{0, 0, 255});
+    nodeBuilder.Header(ImColor{0, 0, 255});
     ImGui::Spring(0);
-    ImGui::TextUnformatted(m_node->name.c_str());
+    ImGui::TextUnformatted(node->name.c_str());
     ImGui::Spring(1);
     ImGui::Dummy(ImVec2(0, 28));
-    m_nodeBuilder.EndHeader();
+    nodeBuilder.EndHeader();
 }
 
 void BlueprintNodeDrawStrategy::drawInputPins()
 {
     DEBUG_RECTANGLE();
-    if (const auto noInputPins = !m_node->m_inputPins.size(); noInputPins)
+    if (const auto noInputPins = !node->inputPins.size(); noInputPins)
     {
         auto size = ImGui::GetItemRectSize();
         ImGui::Dummy(ImVec2{size.x / 2.0f, 0.0f});
     }
-    for (const auto &inputPin : m_node->m_inputPins)
+    for (const auto &inputPin : node->inputPins)
     {
         auto isConnected = !inputPin->connectedPins.empty();
-        m_nodeBuilder.Input(inputPin->id);
+        nodeBuilder.Input(inputPin->id);
 
         ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize),
                           ax::Widgets::IconType::Circle,
@@ -110,17 +110,17 @@ void BlueprintNodeDrawStrategy::drawInputPins()
         ImGui::TextUnformatted(inputPin->name.c_str());
         ImGui::Spring(1);
 
-        m_nodeBuilder.EndInput();
+        nodeBuilder.EndInput();
     }
 }
 
 void BlueprintNodeDrawStrategy::drawOutputPins()
 {
-    for (auto &outputPin : m_node->m_outputPins)
+    for (auto &outputPin : node->outputPins)
     {
         auto isConnected = !outputPin->connectedPins.empty();
 
-        m_nodeBuilder.Output(outputPin->id);
+        nodeBuilder.Output(outputPin->id);
 
         ImGui::Spring(0);
         ImGui::TextUnformatted(outputPin->name.c_str());
@@ -132,7 +132,7 @@ void BlueprintNodeDrawStrategy::drawOutputPins()
                           g_pinIconColor,
                           g_pinIconInnerColor);
 
-        m_nodeBuilder.EndOutput();
+        nodeBuilder.EndOutput();
     }
 }
 

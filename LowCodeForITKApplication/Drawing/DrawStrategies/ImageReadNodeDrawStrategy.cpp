@@ -1,6 +1,6 @@
 #include "ImageReadNodeDrawStrategy.hpp"
 
-#include "DrawDefaults.hpp"
+#include "Drawing/DrawDefaults.hpp"
 #include "imgui.h"
 
 #include "imgui_node_editor.h"

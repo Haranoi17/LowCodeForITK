@@ -2,8 +2,10 @@
 #include <memory>
 #include <vector>
 
-#include "Pins/Interface/Pin.hpp"
-#include "Serializeable.hpp"
+#include "Logic/Interfaces/Identifiable.hpp"
+#include "Logic/Interfaces/Serializeable.hpp"
+#include "Logic/Pins/Pin.hpp"
+#include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
 class Node : public Serializable
 {
@@ -15,7 +17,6 @@ class Node : public Serializable
     Node() = default;
 
     virtual void calculate();
-
     virtual void populateOutputPins();
 
     json serialize() override;
@@ -23,8 +24,8 @@ class Node : public Serializable
 
     IDType                            id;
     std::string                       name;
-    std::vector<std::unique_ptr<Pin>> m_inputPins;
-    std::vector<std::unique_ptr<Pin>> m_outputPins;
+    std::vector<std::unique_ptr<Pin>> inputPins;
+    std::vector<std::unique_ptr<Pin>> outputPins;
     bool                              dirty{true};
 
   private:

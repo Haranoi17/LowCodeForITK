@@ -10,3 +10,6 @@
 [submodule "imgui-filebrowser"]
 	path = externals/imgui-filebrowser
 	url = https://github.com/AirGuanZ/imgui-filebrowser.git
+[submodule "externals/range-v3"]
+	path = externals/range-v3
+	url = https://github.com/ericniebler/range-v3.git

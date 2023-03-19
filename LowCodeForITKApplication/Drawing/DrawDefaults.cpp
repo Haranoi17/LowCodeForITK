@@ -24,10 +24,10 @@ void defaultNodeBegin(const Node *node)
     ImGui::Text(std::format("{}", node->name).c_str());
 
     ImGui::BeginGroup();
-    std::ranges::for_each(node->m_inputPins, [&](const std::unique_ptr<Pin> &pin) { drawInputPin(pin.get()); });
+    std::ranges::for_each(node->inputPins, [&](const std::unique_ptr<Pin> &pin) { drawInputPin(pin.get()); });
     ImGui::EndGroup();
-    node->m_inputPins.empty() ? ImGui::SameLine(200) : ImGui::SameLine();
+    node->inputPins.empty() ? ImGui::SameLine(200) : ImGui::SameLine();
     ImGui::BeginGroup();
-    std::ranges::for_each(node->m_outputPins, [&](const std::unique_ptr<Pin> &pin) { drawOutputPin(pin.get()); });
+    std::ranges::for_each(node->outputPins, [&](const std::unique_ptr<Pin> &pin) { drawOutputPin(pin.get()); });
     ImGui::EndGroup();
 }

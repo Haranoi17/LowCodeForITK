@@ -1,5 +1,6 @@
 #pragma once
-#include <Serializeable.hpp>
+#include "Logic/Interfaces/Identifiable.hpp"
+#include "Logic/Interfaces/Serializeable.hpp"
 
 class UniqueIDProvider : public Serializable
 {

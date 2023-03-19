@@ -1,5 +1,7 @@
 #pragma once
-#include "Nodes/Interface/Node.hpp"
+#include "Logic/Nodes/Node.hpp"
+#include "Logic/Pins/Pin.hpp"
+
 #include <itkImage.h>
 #include <itkRGBAPixel.h>
 
@@ -15,20 +17,8 @@ class ImageReadNode : public Node
 
     void populateOutputPins() override;
 
-    json serialize() override
-    {
-        json serializedImageReadNode         = Node::serialize();
-        serializedImageReadNode["imagePath"] = imagePath;
-        return serializedImageReadNode;
-    }
-
-    void deserialize(json data) override
-    {
-        Node::deserialize(data);
-        imagePath = data["imagePath"];
-
-        imagePin = m_outputPins.back().get(); // this is baaaaad...
-    }
+    json serialize() override;
+    void deserialize(json data) override;
 
     std::string imagePath;
 

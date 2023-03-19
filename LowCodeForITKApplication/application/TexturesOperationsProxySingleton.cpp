@@ -1,4 +1,4 @@
-#include "TexturesOperationsProxySingleton.hpp"
+#include "Application/TexturesOperationsProxySingleton.hpp"
 
 TexturesOperationsProxySingleton *TexturesOperationsProxySingleton::instance(Application *application)
 {

@@ -1,4 +1,4 @@
-#include <Pins\Interface\Pin.hpp>
+#include "Logic/Pins/Pin.hpp"
 
 json Pin::serialize()
 {

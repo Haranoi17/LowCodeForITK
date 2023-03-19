@@ -1,4 +1,5 @@
 #include "LowCodeForITKApplication.hpp"
+#include "Logic/Interfaces/Identifiable.hpp"
 #include "TexturesOperationsProxySingleton.hpp"
 #include <algorithm>
 #include <fstream>
@@ -83,7 +84,13 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
     auto cursorTopLeft = ImGui::GetCursorScreenPos();
 
     std::ranges::for_each(m_logic.getNodesDrawStrategies(),
-                          [&](const std::unique_ptr<NodeDrawStrategy> &nodeDrawStrategy) { nodeDrawStrategy->draw(); });
+                          [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
+
+    if (m_logic.innerNodesStateChanged())
+    {
+        m_logic.propagateEvaluationThroughTheNodes();
+        m_logic.removeDirtyFlagsFromNodes();
+    }
 
     drawingLinks();
 
@@ -207,11 +214,13 @@ void LowCodeForITKApplication::pinsVisualLinking()
         ed::PinId inputPinId, outputPinId;
         if (ed::QueryNewLink(&inputPinId, &outputPinId))
         {
-            if (m_logic.isLinkPossible(std::make_pair(inputPinId.Get(), outputPinId.Get())))
+            IDType logicInputPinId  = static_cast<IDType>(inputPinId.Get());
+            IDType logicOutputPinId = static_cast<IDType>(outputPinId.Get());
+            if (m_logic.isLinkPossible(std::make_pair(logicInputPinId, logicOutputPinId)))
             {
                 if (ed::AcceptNewItem())
                 {
-                    m_logic.createLink(std::make_pair(inputPinId.Get(), outputPinId.Get()));
+                    m_logic.createLink(std::make_pair(logicInputPinId, logicOutputPinId));
                 }
             }
             else

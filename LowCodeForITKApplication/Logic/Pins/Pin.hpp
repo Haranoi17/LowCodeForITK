@@ -1,11 +1,11 @@
 #pragma once
-#include "UniqueIDProvider/Interface/UniqueIDProvider.hpp"
-#include <memory>
-#include <vector>
+#include "Logic/Interfaces/Serializeable.hpp"
+#include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
-#include <Serializeable.hpp>
 #include <any>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 class Node;
 
@@ -21,7 +21,6 @@ class Pin : public Serializable
 
     virtual void calculate()
     {
-        std::cout << "PIN:\n    " << name << " calculating pin\n";
     }
 
     json serialize() override;

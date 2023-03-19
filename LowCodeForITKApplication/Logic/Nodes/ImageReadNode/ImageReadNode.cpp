@@ -1,12 +1,12 @@
 #include "ImageReadNode.hpp"
-#include "Pins/DefinedPins/DefinedPins.hpp"
+#include "Logic/Pins/DefinedPins/DefinedPins.hpp"
 
 #include <itkImageFileReader.h>
 
 ImageReadNode::ImageReadNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
 {
-    m_outputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
-    imagePin = m_outputPins.back().get();
+    outputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
+    imagePin = outputPins.back().get();
 }
 
 void ImageReadNode::populateOutputPins()
@@ -17,4 +17,19 @@ void ImageReadNode::populateOutputPins()
     }
 
     imagePin->payload = itk::ReadImage<ImageType>(imagePath);
+}
+
+json ImageReadNode::serialize()
+{
+    json serializedImageReadNode         = Node::serialize();
+    serializedImageReadNode["imagePath"] = imagePath;
+    return serializedImageReadNode;
+}
+
+void ImageReadNode::deserialize(json data)
+{
+    Node::deserialize(data);
+    imagePath = data["imagePath"];
+
+    imagePin = outputPins.back().get(); // this is baaaaad...
 }

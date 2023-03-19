@@ -1,6 +1,6 @@
 #pragma once
-#include "DrawStrategy\Interface\DrawStrategy.hpp"
-#include "Nodes\Interface\Node.hpp"
+#include "Drawing/DrawStrategy.hpp"
+#include "Logic/Nodes/Node.hpp"
 #include <application.h>
 
 struct NodeDrawStrategy : public DrawStrategy
@@ -12,5 +12,5 @@ struct NodeDrawStrategy : public DrawStrategy
     const IDType nodeToDrawID;
 
   protected:
-    Node *m_node;
+    Node *node;
 };

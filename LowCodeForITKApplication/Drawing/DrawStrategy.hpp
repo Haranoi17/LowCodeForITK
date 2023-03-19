@@ -1,6 +1,4 @@
 #pragma once
-#include "Nodes\Interface\Node.hpp"
-#include "Pins\Interface\Pin.hpp"
 
 struct DrawStrategy
 {

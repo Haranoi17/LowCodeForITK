@@ -1,6 +1,6 @@
 #pragma once
-#include <Interfaces/Serializeable.hpp>
-#include <UniqueIDProvider/Interface/UniqueIDProvider.hpp>
+#include "Logic/Interfaces/Identifiable.hpp"
+#include "Logic/Interfaces/Serializeable.hpp"
 #include <utility>
 
 class LinkInfo : public Serializable

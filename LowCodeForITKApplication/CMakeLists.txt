@@ -1,15 +1,3 @@
-MACRO(SUBDIRLIST result curdir)
-  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
-  SET(dirlist "")
-  FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child})
-      LIST(APPEND dirlist ${child})
-    ENDIF()
-  ENDFOREACH()
-  SET(${result} ${dirlist})
-ENDMACRO()
-
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
@@ -29,17 +17,13 @@ target_link_libraries(${TargetName} PRIVATE
     ${ITK_LIBRARIES}
 )
 
-SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${TargetName} PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/
-    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui_node_editor
-    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/imgui
-    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/application
-    ${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/stb_image
-    ${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/
-    ${CMAKE_INSTALL_PREFIX}/../ITK/include/ITK-5.2
-    ${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include
-    ${SUBDIRS}
+    "${CMAKE_CURRENT_SOURCE_DIR}/"
+    "${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/"
+    "${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/"
+    "${CMAKE_INSTALL_PREFIX}/../ITK/include/"
+    "${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include"
+    "${CMAKE_INSTALL_PREFIX}/../Range-v3/include"
 )
 
 if(MSVC)

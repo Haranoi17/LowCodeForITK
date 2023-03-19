@@ -19,11 +19,24 @@ include( ${ITK_USE_FILE} )
 find_package(nlohmann_json)
 #---------------------------------------------------------------------------
 
+#gtest----------------------------------------------------------------------
 find_package(imgui_node_editor REQUIRED)
 find_package(imgui-filebrowser REQUIRED)
+#---------------------------------------------------------------------------
+
 #gtest----------------------------------------------------------------------
 # find_package(gtest REQUIRED)
 #---------------------------------------------------------------------------
+
+#ranges-v3------------------------------------------------------------------
+find_package(Range-v3 REQUIRED)
+#---------------------------------------------------------------------------
+# get_directory_property(_vars VARIABLES)
+
+# list(REMOVE_ITEM _vars _vars_before ${_vars_before})
+# foreach(_var IN LISTS _vars)
+#     message(STATUS "${_var} = ${${_var}}")
+# endforeach()
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/LowCodeForITKApplication)
 

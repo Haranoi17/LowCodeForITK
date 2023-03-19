@@ -1,7 +1,7 @@
 #pragma once
-#include "DrawStrategy/NodeDrawStrategy.hpp"
-#include "Nodes/Interface/Node.hpp"
-#include "blueprints/builders.h"
+#include "Drawing/DrawStrategies/NodeDrawStrategy.hpp"
+#include "Drawing/blueprints/builders.h"
+#include "Logic/Nodes/Node.hpp"
 
 struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
 {
@@ -19,5 +19,5 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
     virtual void nodeSpecificFunctionalitiesAfterNodeEnd();
     virtual void pushImguiVariables();
 
-    ax::NodeEditor::Utilities::BlueprintNodeBuilder m_nodeBuilder;
+    ax::NodeEditor::Utilities::BlueprintNodeBuilder nodeBuilder;
 };

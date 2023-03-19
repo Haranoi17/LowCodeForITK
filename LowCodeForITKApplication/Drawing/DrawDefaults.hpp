@@ -1,5 +1,5 @@
 #pragma once
-#include "Nodes\Interface\Node.hpp"
+#include "Logic/Nodes/Node.hpp"
 #include "imgui.h"
 
 #ifdef _DEBUG

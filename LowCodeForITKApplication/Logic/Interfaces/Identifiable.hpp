@@ -5,5 +5,5 @@ using IDType = unsigned;
 class Identifiable
 {
   public:
-    IDType getID() const;
+    virtual IDType getID() const = 0;
 };

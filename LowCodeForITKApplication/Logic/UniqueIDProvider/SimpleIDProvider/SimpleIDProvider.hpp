@@ -1,5 +1,5 @@
 #pragma once
-#include "UniqueIDProvider/Interface/UniqueIDProvider.hpp"
+#include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
 #include <algorithm>
 #include <ranges>

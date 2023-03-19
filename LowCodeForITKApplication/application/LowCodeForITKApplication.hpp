@@ -1,7 +1,7 @@
 #include "Logic/Logic.hpp"
-#include "Nodes/Interface/Node.hpp"
-#include "Pins/Interface/Pin.hpp"
-#include "UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
+#include "Logic/Nodes/Node.hpp"
+#include "Logic/Pins/Pin.hpp"
+#include "Logic/UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 #include "imgui_node_editor.h"
 #include <application.h>
 #include <imgui-filebrowser/imfilebrowser.h>
