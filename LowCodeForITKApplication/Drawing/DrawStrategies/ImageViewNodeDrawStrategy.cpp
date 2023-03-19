@@ -21,14 +21,11 @@ ImageViewNodeDrawStrategy::ImageViewNodeDrawStrategy(ImageViewNode *imageViewNod
 
 void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 {
-    if (textureId)
+    if (!imageViewNode->imageChanged)
     {
         ImGui::Image(textureId,
                      ImVec2{static_cast<float>(imageViewNode->width), static_cast<float>(imageViewNode->height)});
-    }
 
-    if (!node->dirty)
-    {
         return;
     }
 
@@ -42,4 +39,6 @@ void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
     textureId = textureOperations->CreateTexture(
         imageViewNode->flatImageArray.get(), imageViewNode->width, imageViewNode->height);
+
+    imageViewNode->imageChanged = false;
 }

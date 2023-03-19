@@ -21,6 +21,7 @@ class ImageViewNode : public Node
 
     Pin *imagePin;
 
+    bool                                        imageChanged{false};
     int                                         width{};
     int                                         height{};
     std::unique_ptr<PixelType::ComponentType[]> flatImageArray;

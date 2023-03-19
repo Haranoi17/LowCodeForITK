@@ -34,7 +34,7 @@ void ImageViewNode::calculate()
         flatArrayIt += PixelType::Dimension;
     }
 
-    dirty = true;
+    imageChanged = true;
 }
 
 void ImageViewNode::deserialize(json data)
