@@ -19,8 +19,8 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
     virtual void nodeSpecificFunctionalitiesAfterNodeEnd();
     virtual void pushImguiVariables();
 
-    void synchronizeLogicalNodePositionToEditor();
-    void setDeserializedPositionInEditior();
+    virtual void synchronizeLogicalNodePositionToEditor();
+    virtual void setDeserializedPositionInEditior();
 
     ax::NodeEditor::Utilities::BlueprintNodeBuilder nodeBuilder;
 };

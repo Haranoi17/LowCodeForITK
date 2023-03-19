@@ -51,6 +51,8 @@ void BlueprintNodeDrawStrategy::draw()
     nodeSpecificFunctionalitiesAfterNodeEnd();
 
     unsetStyleVariables();
+
+    synchronizeLogicalNodePositionToEditor();
 }
 
 void BlueprintNodeDrawStrategy::setStyleVariables()
@@ -143,7 +145,6 @@ void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 
 void BlueprintNodeDrawStrategy::nodeSpecificFunctionalitiesAfterNodeEnd()
 {
-    synchronizeLogicalNodePositionToEditor();
 }
 
 void BlueprintNodeDrawStrategy::pushImguiVariables()

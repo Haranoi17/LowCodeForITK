@@ -20,17 +20,17 @@ void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
         m_filebrowser.Open();
     }
 
-    std::wstring p = m_filebrowser.GetSelected().native().c_str();
-    std::string  pp;
+    std::wstring selectedPath = m_filebrowser.GetSelected().native().c_str();
+    std::string  pathAsString;
 
     if (m_filebrowser.HasSelected())
     {
-        for (const auto &wch : p)
+        for (const auto &wideChar : selectedPath)
         {
-            pp.push_back(wch);
+            pathAsString.push_back(wideChar);
         }
 
-        m_imageViewNode->imagePath = pp;
+        m_imageViewNode->imagePath = pathAsString;
     };
 }
 
