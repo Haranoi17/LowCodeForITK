@@ -6,7 +6,6 @@
 // #include <stb_image/stb_image.h>
 
 #include "Application/LowCodeForITKApplication.hpp"
-#include "Application/TexturesOperationsProxySingleton.hpp"
 
 #include "Drawing/DrawDefaults.hpp"
 #include "imgui_node_editor.h"
@@ -17,28 +16,42 @@ namespace ed = ax::NodeEditor;
 ImageViewNodeDrawStrategy::ImageViewNodeDrawStrategy(ImageViewNode *imageViewNode)
     : BlueprintNodeDrawStrategy{imageViewNode}, imageViewNode{imageViewNode}
 {
+    texturesOperations = TexturesOperationsProxySingleton::instance();
 }
 
 void ImageViewNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
 {
-    if (!imageViewNode->imageChanged)
+    if (imageViewNode->imageChanged)
     {
-        ImGui::Image(textureId,
-                     ImVec2{static_cast<float>(imageViewNode->width), static_cast<float>(imageViewNode->height)});
-
-        return;
+        destroyPreviousTexture();
+        createNewTexture();
+        touchNode();
     }
 
-    auto textureOperations = TexturesOperationsProxySingleton::instance();
+    drawTexture();
+}
 
+void ImageViewNodeDrawStrategy::destroyPreviousTexture()
+{
     if (textureId)
     {
-        textureOperations->DestroyTexture(textureId);
-        textureId = nullptr;
+        texturesOperations->AddTextureToDestroy(textureId);
     }
+}
 
-    textureId = textureOperations->CreateTexture(
+void ImageViewNodeDrawStrategy::createNewTexture()
+{
+    textureId = texturesOperations->CreateTexture(
         imageViewNode->flatImageArray.get(), imageViewNode->width, imageViewNode->height);
+}
 
+void ImageViewNodeDrawStrategy::touchNode()
+{
     imageViewNode->imageChanged = false;
+}
+
+void ImageViewNodeDrawStrategy::drawTexture()
+{
+    ImGui::Image(textureId,
+                 ImVec2{static_cast<float>(imageViewNode->width), static_cast<float>(imageViewNode->height)});
 }

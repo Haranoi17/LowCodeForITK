@@ -71,6 +71,8 @@ void LowCodeForITKApplication::ButtonForLoading()
 
 void LowCodeForITKApplication::OnFrame(float deltaTime)
 {
+    TexturesOperationsProxySingleton::instance()->DestroyTextures();
+
     showFPS();
     ImGui::SameLine();
     ImGui::Separator();

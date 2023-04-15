@@ -1,5 +1,6 @@
 #pragma once
 #include "application.h"
+#include <vector>
 
 struct TexturesOperationsProxySingleton
 {
@@ -9,7 +10,8 @@ struct TexturesOperationsProxySingleton
 
     ImTextureID CreateTexture(const void *data, int width, int height);
 
-    void DestroyTexture(ImTextureID texture);
+    void AddTextureToDestroy(ImTextureID texture);
+    void DestroyTextures();
 
     int GetTextureWidth(ImTextureID texture);
 
@@ -18,4 +20,6 @@ struct TexturesOperationsProxySingleton
   private:
     TexturesOperationsProxySingleton(Application *application);
     Application *m_application;
+
+    std::vector<ImTextureID> texturesToDestroy;
 };

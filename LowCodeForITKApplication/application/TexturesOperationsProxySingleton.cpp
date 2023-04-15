@@ -1,4 +1,5 @@
 #include "Application/TexturesOperationsProxySingleton.hpp"
+#include "range/v3/action.hpp"
 
 TexturesOperationsProxySingleton *TexturesOperationsProxySingleton::instance(Application *application)
 {
@@ -22,9 +23,19 @@ ImTextureID TexturesOperationsProxySingleton::CreateTexture(const void *data, in
     return m_application->CreateTexture(data, width, height);
 }
 
-void TexturesOperationsProxySingleton::DestroyTexture(ImTextureID texture)
+void TexturesOperationsProxySingleton::AddTextureToDestroy(ImTextureID texture)
 {
-    m_application->DestroyTexture(texture);
+    texturesToDestroy.emplace_back(texture);
+}
+
+void TexturesOperationsProxySingleton::DestroyTextures()
+{
+    for (const auto texture : texturesToDestroy)
+    {
+        m_application->DestroyTexture(texture);
+    }
+
+    texturesToDestroy.clear();
 }
 
 int TexturesOperationsProxySingleton::GetTextureWidth(ImTextureID texture)

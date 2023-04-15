@@ -24,6 +24,7 @@ void ImageViewNode::calculate()
 
     auto it          = itk::ImageRegionIterator<ImageType>(image, image->GetLargestPossibleRegion());
     auto flatArrayIt = 0;
+
     for (it.GoToBegin(); !it.IsAtEnd(); ++it)
     {
         flatImageArray[flatArrayIt]     = it.Value().GetRed();
