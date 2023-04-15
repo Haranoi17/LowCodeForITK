@@ -52,7 +52,7 @@ std::vector<std::unique_ptr<Pin>> Node::deserializePins(json pinsData)
     std::vector<std::unique_ptr<Pin>> pins;
     for (auto pinData : pinsData)
     {
-        std::string pinType   = pinData["name"];
+        std::string pinType   = pinData["typeName"];
         auto        pinObject = typeNameToPinObject.at(pinType)();
         pinObject->deserialize(pinData);
 

@@ -6,6 +6,7 @@
 #include <application.h>
 #include <imgui-filebrowser/imfilebrowser.h>
 
+#include <atomic>
 namespace ed = ax::NodeEditor;
 
 struct LowCodeForITKApplication : public Application
@@ -47,4 +48,6 @@ struct LowCodeForITKApplication : public Application
     Logic                    m_logic;
     ed::Config               m_config;
     inline static const auto settingsFile = "LowCodeForITKApplication.json";
+
+    std::atomic<bool> logicFinished{true};
 };

@@ -88,10 +88,16 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
     std::ranges::for_each(m_logic.getNodesDrawStrategies(),
                           [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
 
-    if (m_logic.innerNodesStateChanged())
+    if (m_logic.innerNodesStateChanged() && logicFinished)
     {
-        m_logic.propagateEvaluationThroughTheNodes();
-        m_logic.removeDirtyFlagsFromNodes();
+        logicFinished = false;
+        std::thread t{[this]() {
+            m_logic.propagateEvaluationThroughTheNodes();
+            m_logic.removeDirtyFlagsFromNodes();
+            logicFinished = true;
+        }};
+
+        t.detach();
     }
 
     drawingLinks();

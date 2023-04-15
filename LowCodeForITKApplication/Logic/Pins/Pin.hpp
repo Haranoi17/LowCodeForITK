@@ -5,6 +5,7 @@
 #include <any>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <vector>
 
 class Node;
@@ -12,23 +13,25 @@ class Node;
 class Pin : public Serializable
 {
   public:
-    Pin(UniqueIDProvider *idProvider, Node *parentNode, std::string_view name = "anyValue")
-        : id{idProvider->generateID()}, parentNode{parentNode}, name{name.data()}
+    Pin(UniqueIDProvider *idProvider, Node *parentNode, std::optional<std::string_view> contextName,
+        std::string_view typeName = "anyValue")
+        : id{idProvider->generateID()}, parentNode{parentNode}, contextName{contextName}, typeName{typeName.data()}
     {
     }
 
     Pin() = default;
 
-    virtual void calculate()
-    {
-    }
+    virtual void calculate();
 
     json serialize() override;
     void deserialize(json data) override;
 
-    IDType             id;
-    Node              *parentNode;
-    std::vector<Pin *> connectedPins;
-    std::string        name;
-    std::any           payload;
+    std::string getDrawText() const;
+
+    IDType                     id;
+    Node                      *parentNode;
+    std::vector<Pin *>         connectedPins;
+    std::string                typeName;
+    std::optional<std::string> contextName;
+    std::any                   payload;
 };

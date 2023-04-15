@@ -5,6 +5,8 @@
 #include <imgui.h>
 #include <itkImage.h>
 
+#include <future>
+
 class ImageViewNode : public Node
 {
   public:
@@ -25,4 +27,6 @@ class ImageViewNode : public Node
     int                                         width{};
     int                                         height{};
     std::unique_ptr<PixelType::ComponentType[]> flatImageArray;
+    int                                         previousAllocationSize{};
+    std::vector<std::future<void>>              pixelOperations;
 };

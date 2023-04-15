@@ -20,7 +20,12 @@ void ImageViewNode::calculate()
     width     = size[0];
     height    = size[1];
 
-    flatImageArray = std::make_unique<PixelType::ComponentType[]>(width * height * PixelType::Dimension);
+    auto newAllocationSize = width * height * PixelType::Dimension;
+    if (previousAllocationSize != newAllocationSize)
+    {
+        flatImageArray         = std::make_unique<PixelType::ComponentType[]>(newAllocationSize);
+        previousAllocationSize = newAllocationSize;
+    }
 
     auto it          = itk::ImageRegionIterator<ImageType>(image, image->GetLargestPossibleRegion());
     auto flatArrayIt = 0;

@@ -1,15 +1,17 @@
 #pragma once
 #include "Logic/Pins/Pin.hpp"
+#include <optional>
 
-#define NewPinType(NAME, NAME_STR)                                                             \
-    struct NAME : public Pin                                                                   \
-    {                                                                                          \
-        inline static std::string typeName{NAME_STR};                                          \
-        NAME(UniqueIDProvider *idProvider, Node *parentNode, std::string_view name = NAME_STR) \
-            : Pin{idProvider, parentNode, name}                                                \
-        {                                                                                      \
-        }                                                                                      \
-        NAME() = default;                                                                      \
+#define NewPinType(NAME, NAME_STR)                                                                                     \
+    struct NAME : public Pin                                                                                           \
+    {                                                                                                                  \
+        inline static std::string typeName{NAME_STR};                                                                  \
+        NAME(UniqueIDProvider *idProvider, Node *parentNode,                                                           \
+             std::optional<std::string_view> optionalContextName = std::nullopt, std::string_view typeName = NAME_STR) \
+            : Pin{idProvider, parentNode, optionalContextName, typeName}                                               \
+        {                                                                                                              \
+        }                                                                                                              \
+        NAME() = default;                                                                                              \
     };
 
 NewPinType(ImagePin, "ImagePin");

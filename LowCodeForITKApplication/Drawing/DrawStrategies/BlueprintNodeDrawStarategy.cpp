@@ -64,7 +64,7 @@ void BlueprintNodeDrawStrategy::setStyleVariables()
     ed::PushStyleColor(ed::StyleColor_PinRect, ImColor(229, 229, 229, 60));
     ed::PushStyleColor(ed::StyleColor_PinRectBorder, ImColor(125, 125, 125, 60));
     ed::PushStyleVar(ed::StyleVar_NodePadding, ImVec4(0, 0, 0, 0));
-    ed::PushStyleVar(ed::StyleVar_NodeRounding, 2);
+    ed::PushStyleVar(ed::StyleVar_NodeRounding, 5);
     ed::PushStyleVar(ed::StyleVar_SourceDirection, ImVec2(0.0f, 1.0f));
     ed::PushStyleVar(ed::StyleVar_TargetDirection, ImVec2(0.0f, -1.0f));
     ed::PushStyleVar(ed::StyleVar_LinkStrength, 0.0f);
@@ -110,7 +110,7 @@ void BlueprintNodeDrawStrategy::drawInputPins()
 
         ImGui::Spring(1);
 
-        ImGui::TextUnformatted(inputPin->name.c_str());
+        ImGui::TextUnformatted(inputPin->getDrawText().c_str());
         ImGui::Spring(1);
 
         nodeBuilder.EndInput();
@@ -126,7 +126,7 @@ void BlueprintNodeDrawStrategy::drawOutputPins()
         nodeBuilder.Output(outputPin->id);
 
         ImGui::Spring(0);
-        ImGui::TextUnformatted(outputPin->name.c_str());
+        ImGui::TextUnformatted(outputPin->getDrawText().c_str());
         ImGui::Spring(0);
 
         ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize),

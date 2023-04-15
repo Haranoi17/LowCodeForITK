@@ -14,12 +14,14 @@
 #include "UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 
 #include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
+#include "Drawing/DrawStrategies/EdgeDetectionNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/ImageReadNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/ImageViewNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/RGBANodeDrawStrategy.hpp"
 
 #include "Logic/utilities.hpp"
 
+#include "Nodes/EdgeDetectionNode/EdgeDetectionNode.hpp"
 #include "Nodes/ImageReadNode/ImageReadNode.hpp"
 #include "Nodes/ImageViewNode/ImageViewNode.hpp"
 #include "Nodes/RGBANode/RGBANode.hpp"
@@ -29,7 +31,8 @@ std::map<std::string, std::function<std::unique_ptr<Node>()>> Logic::nodeTypeNam
     {ImageReadNode::typeName, []() { return std::make_unique<ImageReadNode>(); }},
     {ImageViewNode::typeName, []() { return std::make_unique<ImageViewNode>(); }},
     {PercentageNode::typeName, []() { return std::make_unique<PercentageNode>(); }},
-    {TintNode::typeName, []() { return std::make_unique<TintNode>(); }}};
+    {TintNode::typeName, []() { return std::make_unique<TintNode>(); }},
+    {EdgeDetectionNode::typeName, []() { return std::make_unique<EdgeDetectionNode>(); }}};
 
 std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>> Logic::nodeTypeNameToDrawStrategyMap{
     {RGBANode::typeName,
@@ -43,7 +46,10 @@ std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>> 
          return std::make_unique<PercentageNodeDrawStrategy>(dynamic_cast<PercentageNode *>(nodePtr));
      }},
     {TintNode::typeName,
-     [](Node *nodePtr) { return std::make_unique<TintNodeDrawStrategy>(dynamic_cast<TintNode *>(nodePtr)); }}};
+     [](Node *nodePtr) { return std::make_unique<TintNodeDrawStrategy>(dynamic_cast<TintNode *>(nodePtr)); }},
+    {EdgeDetectionNode::typeName, [](Node *nodePtr) {
+         return std::make_unique<EdgeDetectionNodeDrawStrategy>(dynamic_cast<EdgeDetectionNode *>(nodePtr));
+     }}};
 
 Logic::Logic() : idProvider{std::make_unique<SimpleIDProvider>()}
 {
@@ -78,6 +84,12 @@ void Logic::updateCreators()
     m_nodeCreators[TintNode::typeName] = [&]() {
         auto node         = std::make_unique<TintNode>(idProvider.get());
         auto drawStrategy = std::make_unique<TintNodeDrawStrategy>(node.get());
+        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+    };
+
+    m_nodeCreators[EdgeDetectionNode::typeName] = [&]() {
+        auto node         = std::make_unique<EdgeDetectionNode>(idProvider.get());
+        auto drawStrategy = std::make_unique<EdgeDetectionNodeDrawStrategy>(node.get());
         return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
     };
 }
@@ -124,7 +136,7 @@ bool Logic::isLinkPossible(std::pair<IDType, IDType> pinIdPair)
     auto secondPin{getPinById(pinIdPair.second)};
 
     bool triesToConnectItself  = firstPin->id == secondPin->id;
-    bool areSameTypes          = firstPin->name == secondPin->name;
+    bool areSameTypes          = firstPin->typeName == secondPin->typeName;
     bool arePinsInputAndOutput = isInputPin(firstPin) != isInputPin(secondPin);
 
     return !triesToConnectItself && !arePinsAlreadyConnected(firstPin, secondPin) &&

@@ -7,14 +7,14 @@ namespace ed = ax::NodeEditor;
 void drawInputPin(const Pin *pin)
 {
     ed::BeginPin(pin->id, ed::PinKind::Input);
-    ImGui::Text(std::format("->{}", pin->name).c_str());
+    ImGui::Text(std::format("->{}", pin->getDrawText().c_str()).c_str());
     ed::EndPin();
 }
 
 void drawOutputPin(const Pin *pin)
 {
     ed::BeginPin(pin->id, ed::PinKind::Output);
-    ImGui::Text(std::format("{}->", pin->name).c_str());
+    ImGui::Text(std::format("{}->", pin->getDrawText().c_str()).c_str());
     ed::EndPin();
 }
 
