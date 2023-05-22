@@ -18,22 +18,26 @@ struct LowCodeForITKApplication : public Application
     void OnStop() override;
 
     void buttonForTriggeringEvaluation();
-    void ButtonForSaving();
-    void ButtonForLoading();
 
-    void serialize();
-    void deserialize();
+    void serialize(std::string_view fileName);
+    void deserialize(std::string_view fileName);
 
     void OnFrame(float deltaTime) override;
 
+    void ProjectLoading();
+
+    void SaveNewFileForm();
+
     void drawMenu();
+
+    void SubMenuFile();
+    void SubMenuNodes();
 
     void ImGuiDemoModal();
 
-    void buttonForNodesModal();
-
+    void nodesPopup();
     void drawingLinks();
-
+    void addNode(std::unique_ptr<NodeWithDrawStrategy> nodeWithDrawStrategy);
     void pinsVisualLinking();
 
     void showFPS();
@@ -41,13 +45,21 @@ struct LowCodeForITKApplication : public Application
 
     void linksDeletion();
 
-    ax::NodeEditor::EditorContext *m_Context    = nullptr; // Editor context, required to trace a editor state.
-    bool                           m_FirstFrame = true;    // Flag set for first frame only, some action need
+    ax::NodeEditor::EditorContext *context      = nullptr; // Editor context, required to trace a editor state.
+    bool                           isFirstFrame = true;    // Flag set for first frame only, some action need
                                                            // to be executed once.
 
-    Logic                    m_logic;
-    ed::Config               m_config;
+    Logic                    logic;
+    ed::Config               config;
     inline static const auto settingsFile = "LowCodeForITKApplication.json";
+    std::string              currentProjectFileName;
+
+    ImGui::FileBrowser browser;
+    bool               inputFileName{false};
+    std::string        newFileName;
+
+    bool                  loadProject{false};
+    std::optional<IDType> pinInitializingNodeCreationID;
 
     std::atomic<bool> logicFinished{true};
 };

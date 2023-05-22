@@ -5,7 +5,7 @@
 
 struct EdgeDetectionNodeDrawStrategy : public BlueprintNodeDrawStrategy
 {
-    EdgeDetectionNodeDrawStrategy(EdgeDetectionNode *imageViewNode);
+    EdgeDetectionNodeDrawStrategy(EdgeDetectionNode *edgeDetectionNode);
 
   private:
     EdgeDetectionNode *edgeDetectionNode;

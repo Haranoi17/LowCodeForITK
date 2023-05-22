@@ -5,15 +5,15 @@
 #include <itkImage.h>
 #include <itkRGBAPixel.h>
 
-class EdgeDetectionNode : public Node
+class GaussianBlurNode : public Node
 {
   public:
     using PixelType = itk::RGBAPixel<unsigned char>;
     using ImageType = itk::Image<PixelType, 2>;
 
-    inline static std::string typeName = "EdgeDetectionNode";
-    EdgeDetectionNode(UniqueIDProvider *idProvider);
-    EdgeDetectionNode() = default;
+    inline static std::string typeName = "GaussianBlurNode";
+    GaussianBlurNode(UniqueIDProvider *idProvider);
+    GaussianBlurNode() = default;
 
     void calculate() override;
     void populateOutputPins() override;
@@ -22,10 +22,8 @@ class EdgeDetectionNode : public Node
 
   private:
     Pin *inputImagePin;
+    Pin *sigmaPin;
     Pin *outputImagePin;
 
-    Pin                         *varianceFloatPin;
-    Pin                         *lowThresholdPin;
-    Pin                         *highThresholdPin;
-    itk::SmartPointer<ImageType> processedImage{};
+    itk::SmartPointer<ImageType> outputImage;
 };

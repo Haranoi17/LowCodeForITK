@@ -13,43 +13,8 @@
 
 #include "UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 
-#include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
-#include "Drawing/DrawStrategies/EdgeDetectionNodeDrawStrategy.hpp"
-#include "Drawing/DrawStrategies/ImageReadNodeDrawStrategy.hpp"
-#include "Drawing/DrawStrategies/ImageViewNodeDrawStrategy.hpp"
-#include "Drawing/DrawStrategies/RGBANodeDrawStrategy.hpp"
-
 #include "Logic/utilities.hpp"
-
-#include "Nodes/EdgeDetectionNode/EdgeDetectionNode.hpp"
-#include "Nodes/ImageReadNode/ImageReadNode.hpp"
-#include "Nodes/ImageViewNode/ImageViewNode.hpp"
-#include "Nodes/RGBANode/RGBANode.hpp"
-
-std::map<std::string, std::function<std::unique_ptr<Node>()>> Logic::nodeTypeNameToFactoryMethodMap{
-    {RGBANode::typeName, []() { return std::make_unique<RGBANode>(); }},
-    {ImageReadNode::typeName, []() { return std::make_unique<ImageReadNode>(); }},
-    {ImageViewNode::typeName, []() { return std::make_unique<ImageViewNode>(); }},
-    {PercentageNode::typeName, []() { return std::make_unique<PercentageNode>(); }},
-    {TintNode::typeName, []() { return std::make_unique<TintNode>(); }},
-    {EdgeDetectionNode::typeName, []() { return std::make_unique<EdgeDetectionNode>(); }}};
-
-std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>> Logic::nodeTypeNameToDrawStrategyMap{
-    {RGBANode::typeName,
-     [](Node *nodePtr) { return std::make_unique<RGBANodeDrawStrategy>(dynamic_cast<RGBANode *>(nodePtr)); }},
-    {ImageReadNode::typeName,
-     [](Node *nodePtr) { return std::make_unique<ImageReadNodeDrawStrategy>(dynamic_cast<ImageReadNode *>(nodePtr)); }},
-    {ImageViewNode::typeName,
-     [](Node *nodePtr) { return std::make_unique<ImageViewNodeDrawStrategy>(dynamic_cast<ImageViewNode *>(nodePtr)); }},
-    {PercentageNode::typeName,
-     [](Node *nodePtr) {
-         return std::make_unique<PercentageNodeDrawStrategy>(dynamic_cast<PercentageNode *>(nodePtr));
-     }},
-    {TintNode::typeName,
-     [](Node *nodePtr) { return std::make_unique<TintNodeDrawStrategy>(dynamic_cast<TintNode *>(nodePtr)); }},
-    {EdgeDetectionNode::typeName, [](Node *nodePtr) {
-         return std::make_unique<EdgeDetectionNodeDrawStrategy>(dynamic_cast<EdgeDetectionNode *>(nodePtr));
-     }}};
+#include "application/NodeDefines.hpp"
 
 Logic::Logic() : idProvider{std::make_unique<SimpleIDProvider>()}
 {
@@ -57,41 +22,16 @@ Logic::Logic() : idProvider{std::make_unique<SimpleIDProvider>()}
 
 void Logic::updateCreators()
 {
-    m_nodeCreators[ImageViewNode::typeName] = [&]() {
-        auto node         = std::make_unique<ImageViewNode>(idProvider.get());
-        auto drawStrategy = std::make_unique<ImageViewNodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
-
-    m_nodeCreators[ImageReadNode::typeName] = [&]() {
-        auto node         = std::make_unique<ImageReadNode>(idProvider.get());
-        auto drawStrategy = std::make_unique<ImageReadNodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
-
-    m_nodeCreators[RGBANode::typeName] = [&]() {
-        auto node         = std::make_unique<RGBANode>(idProvider.get());
-        auto drawStrategy = std::make_unique<RGBANodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
-
-    m_nodeCreators[PercentageNode::typeName] = [&]() {
-        auto node         = std::make_unique<PercentageNode>(idProvider.get());
-        auto drawStrategy = std::make_unique<PercentageNodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
-
-    m_nodeCreators[TintNode::typeName] = [&]() {
-        auto node         = std::make_unique<TintNode>(idProvider.get());
-        auto drawStrategy = std::make_unique<TintNodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
-
-    m_nodeCreators[EdgeDetectionNode::typeName] = [&]() {
-        auto node         = std::make_unique<EdgeDetectionNode>(idProvider.get());
-        auto drawStrategy = std::make_unique<EdgeDetectionNodeDrawStrategy>(node.get());
-        return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-    };
+    for (const auto nodeType : registeredNodeTypes)
+    {
+        nodeCreators[nodeType] = [&, nodeType]() {
+            auto nodeCreator         = nodeTypeNameToCreatorMap.at(nodeType).get();
+            auto drawStrategyCreator = nodeTypeNameToDrawStrategyCreatorMap.at(nodeType);
+            auto node                = nodeCreator->createFullyFunctional(idProvider.get());
+            auto drawStrategy        = drawStrategyCreator(node.get());
+            return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
+        };
+    }
 }
 
 void Logic::chainReaction(Pin *outputPin)
@@ -125,8 +65,6 @@ void Logic::propagateEvaluationThroughTheNodes()
 
     auto inputNodes = nodes | ranges::views::filter([&](const auto &node) { return isNodeAnInput(node.get()); });
 
-    // cleanNonInputNodesPins();
-
     std::ranges::for_each(inputNodes, startChainReaction);
 }
 
@@ -148,10 +86,15 @@ void Logic::createLink(std::pair<IDType, IDType> pinIdPair)
     auto firstPin{getPinById(pinIdPair.first)};
     auto secondPin{getPinById(pinIdPair.second)};
 
-    links.emplace_back(std::make_unique<LinkInfo>(idProvider->generateID(), pinIdPair));
+    links.emplace_back(std::make_unique<LinkInfo>(idProvider.get(), pinIdPair));
 
     firstPin->connectedPins.emplace_back(secondPin);
     secondPin->connectedPins.emplace_back(firstPin);
+}
+
+bool Logic::isInputPin(IDType pinId)
+{
+    return isInputPin(getPinById(pinId));
 }
 
 void Logic::addNode(std::unique_ptr<Node> newNode)
@@ -162,6 +105,11 @@ void Logic::addNode(std::unique_ptr<Node> newNode)
 void Logic::addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy)
 {
     nodeDrawStrategies.push_back(std::move(nodeDrawStrategy));
+}
+
+std::string Logic::getPinType(IDType pinId)
+{
+    return getPinById(pinId)->typeName;
 }
 
 bool Logic::innerNodesStateChanged() const
@@ -285,10 +233,10 @@ void Logic::deserializeNodes(json serializedNodes)
     for (auto nodeData : serializedNodes)
     {
         std::string nodeTypeName = nodeData["name"];
-        auto        node         = nodeTypeNameToFactoryMethodMap.at(nodeTypeName)();
+        auto        node         = nodeTypeNameToCreatorMap.at(nodeTypeName)->createForDeserialization();
         node->deserialize(nodeData);
 
-        auto drawStrategy = nodeTypeNameToDrawStrategyMap.at(nodeTypeName)(node.get());
+        auto drawStrategy = nodeTypeNameToDrawStrategyCreatorMap.at(nodeTypeName)(node.get());
 
         addNode(std::move(node));
         addNodeDrawStrategy(std::move(drawStrategy));

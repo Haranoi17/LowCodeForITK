@@ -26,7 +26,7 @@ json Node::serialize()
     json serializedNode;
 
     serializedNode["id"]   = id;
-    serializedNode["name"] = name;
+    serializedNode["name"] = typeName;
     serializedNode["posX"] = position.x;
     serializedNode["posY"] = position.y;
 
@@ -40,7 +40,7 @@ json Node::serialize()
 void Node::deserialize(json data)
 {
     id       = data["id"];
-    name     = data["name"];
+    typeName = data["name"];
     position = Position{data["posX"], data["posY"]};
 
     inputPins  = deserializePins(data["inputPins"]);

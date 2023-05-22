@@ -23,7 +23,7 @@ void defaultNodeBegin(const Node *node)
     ed::BeginNode(node->id);
     ed::SetNodePosition(node->id, ImVec2{node->getPosition().x, node->getPosition().y});
 
-    ImGui::Text(std::format("{}", node->name).c_str());
+    ImGui::Text(std::format("{}", node->typeName).c_str());
 
     ImGui::BeginGroup();
     std::ranges::for_each(node->inputPins, [&](const std::unique_ptr<Pin> &pin) { drawInputPin(pin.get()); });

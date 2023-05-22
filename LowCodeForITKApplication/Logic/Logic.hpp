@@ -35,8 +35,11 @@ class Logic : public Serializable
     bool isLinkPossible(std::pair<IDType, IDType> pinIdPair);
     void createLink(std::pair<IDType, IDType> pinIdPair);
 
+    bool isInputPin(IDType pinId);
     void addNode(std::unique_ptr<Node> newNode);
     void addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy);
+
+    std::string getPinType(IDType pinId);
 
     bool innerNodesStateChanged() const;
     void removeDirtyFlagsFromNodes();
@@ -45,17 +48,13 @@ class Logic : public Serializable
     std::vector<LinkInfo *>         getLinks() const;
     std::vector<Node *>             getNodes() const;
 
-    std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> m_nodeCreators;
+    std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> nodeCreators;
 
     json serialize() override;
 
     void deserialize(json data) override;
 
   private:
-    static std::map<std::string, std::function<std::unique_ptr<Node>()>> nodeTypeNameToFactoryMethodMap;
-    static std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>>
-        nodeTypeNameToDrawStrategyMap;
-
     json serializeLinks();
 
     json serializeNodes();
@@ -74,11 +73,10 @@ class Logic : public Serializable
     bool arePinsOnSameNode(const Pin *first, const Pin *second) const;
     bool arePinsAlreadyConnected(const Pin *first, const Pin *second) const;
 
-    bool isInputPin(const Pin *pin) const;
-
     std::vector<Pin *> collectAllPins() const;
     std::vector<Pin *> getPinsOnNode(const Node *node) const;
 
+    bool                         isInputPin(const Pin *pin) const;
     const LinkInfo              *getLinkInfoById(IDType linkId) const;
     const std::unique_ptr<Node> &getNodeWithPin(IDType pinId) const;
 

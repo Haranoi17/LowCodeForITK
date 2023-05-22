@@ -5,23 +5,18 @@
 #include <itkImage.h>
 #include <itkRGBAPixel.h>
 
-class ImageReadNode : public Node
+class SampleNodeForAutomation : public Node
 {
   public:
     using PixelType = itk::RGBAPixel<unsigned char>;
     using ImageType = itk::Image<PixelType, 2>;
 
-    inline static std::string typeName = "ImageReadNode";
-    ImageReadNode(UniqueIDProvider *idProvider);
-    ImageReadNode() = default;
+    inline static std::string typeName = "SampleNodeForAutomation";
+    SampleNodeForAutomation(UniqueIDProvider *idProvider, std::string_view name = typeName);
+    SampleNodeForAutomation() = default;
 
+    void calculate() override;
     void populateOutputPins() override;
 
-    json serialize() override;
     void deserialize(json data) override;
-
-    std::string imagePath;
-
-  private:
-    Pin *imagePin;
 };

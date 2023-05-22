@@ -17,8 +17,11 @@
 NewPinType(ImagePin, "ImagePin");
 NewPinType(RGBAPin, "RGBAPin");
 NewPinType(PercentagePin, "PercentagePin");
+NewPinType(FloatingPointValuePin, "FloatingPointPin");
 
 inline std::map<std::string, std::function<std::unique_ptr<Pin>()>> typeNameToPinObject{
     {ImagePin::typeName, []() { return std::make_unique<ImagePin>(); }},
     {RGBAPin::typeName, []() { return std::make_unique<RGBAPin>(); }},
-    {PercentagePin::typeName, []() { return std::make_unique<PercentagePin>(); }}};
+    {PercentagePin::typeName, []() { return std::make_unique<PercentagePin>(); }},
+    {FloatingPointValuePin::typeName, []() { return std::make_unique<FloatingPointValuePin>(); }},
+};

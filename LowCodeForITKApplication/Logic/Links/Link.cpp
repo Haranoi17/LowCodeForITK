@@ -1,6 +1,7 @@
 #include "Link.hpp"
 
-LinkInfo::LinkInfo(IDType id, std::pair<IDType, IDType> pins) : id{id}, pinIds{pins}
+LinkInfo::LinkInfo(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins)
+    : idProvider{idProvider}, id{idProvider->generateID()}, pinIds{pins}
 {
 }
 

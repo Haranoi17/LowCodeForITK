@@ -5,23 +5,20 @@
 #include <itkImage.h>
 #include <itkRGBAPixel.h>
 
-class ImageReadNode : public Node
+class FloatingPoinValueNode : public Node
 {
   public:
     using PixelType = itk::RGBAPixel<unsigned char>;
     using ImageType = itk::Image<PixelType, 2>;
 
-    inline static std::string typeName = "ImageReadNode";
-    ImageReadNode(UniqueIDProvider *idProvider);
-    ImageReadNode() = default;
+    inline static std::string typeName = "FloatingPoinValueNode";
+    FloatingPoinValueNode(UniqueIDProvider *idProvider);
+    FloatingPoinValueNode() = default;
 
     void populateOutputPins() override;
 
-    json serialize() override;
     void deserialize(json data) override;
 
-    std::string imagePath;
-
-  private:
-    Pin *imagePin;
+    float value{};
+    Pin  *valuePin;
 };

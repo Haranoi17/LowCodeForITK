@@ -13,7 +13,7 @@ class RGBANode : public Node
     inline static std::string typeName = "RGBANode";
 
     RGBANode() = default;
-    RGBANode(UniqueIDProvider *idProvider, std::string_view name = typeName);
+    RGBANode(UniqueIDProvider *idProvider);
 
     void populateOutputPins() override;
 

@@ -1,4 +1,4 @@
-#include "BlueprintNodeDrawStarategy.hpp"
+#include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
 #include "Logic/Nodes/ImageReadNode/ImageReadNode.hpp"
 
 #include "imgui.h"

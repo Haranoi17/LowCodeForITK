@@ -15,11 +15,19 @@ class Pin : public Serializable
   public:
     Pin(UniqueIDProvider *idProvider, Node *parentNode, std::optional<std::string_view> contextName,
         std::string_view typeName = "anyValue")
-        : id{idProvider->generateID()}, parentNode{parentNode}, contextName{contextName}, typeName{typeName.data()}
+        : idProvider{idProvider}, id{idProvider->generateID()}, parentNode{parentNode},
+          contextName{contextName}, typeName{typeName.data()}
     {
     }
 
     Pin() = default;
+    ~Pin()
+    {
+        if (idProvider)
+        {
+            idProvider->freeID(id);
+        }
+    }
 
     virtual void calculate();
 
@@ -28,6 +36,7 @@ class Pin : public Serializable
 
     std::string getDrawText() const;
 
+    UniqueIDProvider          *idProvider;
     IDType                     id;
     Node                      *parentNode;
     std::vector<Pin *>         connectedPins;

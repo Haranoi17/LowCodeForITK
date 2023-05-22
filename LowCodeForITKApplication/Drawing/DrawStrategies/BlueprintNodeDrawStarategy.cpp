@@ -10,6 +10,7 @@
 #include "Application/TexturesAccessorSingleton.hpp"
 #include "Drawing/blueprints/builders.h"
 #include "Drawing/blueprints/widgets.h"
+#include <application/NodeDefines.hpp>
 
 namespace ed   = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
@@ -81,9 +82,9 @@ void BlueprintNodeDrawStrategy::unsetStyleVariables()
 
 void BlueprintNodeDrawStrategy::drawHeader()
 {
-    nodeBuilder.Header(ImColor{0, 0, 255});
+    nodeBuilder.Header(getHeaderColor());
     ImGui::Spring(0);
-    ImGui::TextUnformatted(node->name.c_str());
+    ImGui::TextUnformatted(node->typeName.c_str());
     ImGui::Spring(1);
     ImGui::Dummy(ImVec2(0, 28));
     nodeBuilder.EndHeader();
@@ -91,12 +92,6 @@ void BlueprintNodeDrawStrategy::drawHeader()
 
 void BlueprintNodeDrawStrategy::drawInputPins()
 {
-    DEBUG_RECTANGLE();
-    if (const auto noInputPins = !node->inputPins.size(); noInputPins)
-    {
-        auto size = ImGui::GetItemRectSize();
-        ImGui::Dummy(ImVec2{size.x / 2.0f, 0.0f});
-    }
     for (const auto &inputPin : node->inputPins)
     {
         auto isConnected = !inputPin->connectedPins.empty();
@@ -108,10 +103,10 @@ void BlueprintNodeDrawStrategy::drawInputPins()
                           g_pinIconColor,
                           g_pinIconInnerColor);
 
-        ImGui::Spring(1);
+        ImGui::Spring(0);
 
         ImGui::TextUnformatted(inputPin->getDrawText().c_str());
-        ImGui::Spring(1);
+        ImGui::Spring(0);
 
         nodeBuilder.EndInput();
     }
@@ -156,6 +151,17 @@ void BlueprintNodeDrawStrategy::setDeserializedPositionInEditior()
 {
     auto deserializedPosition = node->getPosition();
     ed::SetNodePosition(node->id, ImVec2{deserializedPosition.x, deserializedPosition.y});
+}
+
+ImColor BlueprintNodeDrawStrategy::getHeaderColor()
+{
+    static std ::map<Functionality, ImColor> functionalityColorMap{
+        {Functionality::Filtering, ImColor{0.0f, 1.0f, 0.0f}},
+        {Functionality::Input, ImColor{0.0f, 0.0f, 1.0f}},
+        {Functionality::Output, ImColor{1.0f, 0.0f, 0.0f}}};
+
+    auto nodeFunctionality = nodeTypeFunctionalityMap.at(node->typeName);
+    return functionalityColorMap.at(nodeFunctionality);
 }
 
 void BlueprintNodeDrawStrategy::synchronizeLogicalNodePositionToEditor()

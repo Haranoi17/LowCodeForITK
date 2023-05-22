@@ -1,71 +1,135 @@
 #include "LowCodeForITKApplication.hpp"
 #include "Logic/Interfaces/Identifiable.hpp"
+#include "NodeDefines.hpp"
 #include "TexturesOperationsProxySingleton.hpp"
 #include <algorithm>
 #include <fstream>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+#include <ranges>
 
-std::string serializationFileName = "serialization.json";
+std::string nodesDrawerPopupName = "NodesDrawerPopup";
+std::string inputFileModalName   = "InputFileNameModal";
 
-void LowCodeForITKApplication::serialize()
+std::string projectFileExtention = ".json";
+
+void LowCodeForITKApplication::serialize(std::string_view fileName)
 {
     std::ofstream fstream;
-    fstream.open(serializationFileName);
-    fstream << m_logic.serialize();
+    fstream.open(fileName);
+    fstream << logic.serialize();
     fstream.close();
 }
 
-void LowCodeForITKApplication::deserialize()
+void LowCodeForITKApplication::deserialize(std::string_view fileName)
 {
     json json;
 
     std::ifstream fstream;
-    fstream.open(serializationFileName);
+    fstream.open(fileName);
     if (fstream.is_open())
     {
         fstream >> json;
-        m_logic.deserialize(json);
-        m_logic.updateCreators();
-        m_logic.propagateEvaluationThroughTheNodes();
+        logic.deserialize(json);
+        logic.updateCreators();
+        logic.propagateEvaluationThroughTheNodes();
         fstream.close();
     }
 }
 
 void LowCodeForITKApplication::OnStart()
 {
-    m_logic.updateCreators();
+    RegisterNodes();
+    logic.updateCreators();
 
-    m_config.SettingsFile = settingsFile;
+    config.SettingsFile = settingsFile;
 
-    m_Context = ed::CreateEditor(&m_config);
+    context = ed::CreateEditor(&config);
 
     TexturesOperationsProxySingleton::instance(this);
 }
 
 void LowCodeForITKApplication::OnStop()
 {
-    ed::DestroyEditor(m_Context);
+    ed::DestroyEditor(context);
 }
 
 void LowCodeForITKApplication::buttonForTriggeringEvaluation()
 {
     if (ImGui::Button("TriggerEvaluationButton", ImVec2{200, 40}))
     {
-        m_logic.propagateEvaluationThroughTheNodes();
+        logic.propagateEvaluationThroughTheNodes();
     }
 }
 
-void LowCodeForITKApplication::ButtonForSaving()
+void LowCodeForITKApplication::drawMenu()
 {
-    if (ImGui::Button("save", ImVec2{100, 20}))
+    if (ImGui::BeginMainMenuBar())
     {
-        serialize();
+        SubMenuFile();
+        SubMenuNodes();
+        ImGui::EndMainMenuBar();
     }
 }
-void LowCodeForITKApplication::ButtonForLoading()
+
+void LowCodeForITKApplication::SubMenuFile()
 {
-    if (ImGui::Button("load", ImVec2{100, 20}))
+    if (ImGui::BeginMenu("File"))
     {
-        deserialize();
+        if (ImGui::MenuItem("open"))
+        {
+            browser.SetTypeFilters({projectFileExtention});
+            browser.Open();
+            loadProject = true;
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("save"))
+        {
+            if (currentProjectFileName.empty())
+            {
+                inputFileName = true;
+            }
+            else
+            {
+                serialize(currentProjectFileName);
+            }
+        }
+
+        if (ImGui::MenuItem("save as"))
+        {
+            inputFileName = true;
+        }
+
+        ImGui::EndMenu();
+    }
+}
+
+void LowCodeForITKApplication::SubMenuNodes()
+{
+    if (ImGui::BeginMenu("Nodes"))
+    {
+        for (const auto [functionality, functionalityName] : functionalityNameMap)
+        {
+            if (ImGui::BeginMenu(functionalityName.c_str()))
+            {
+                for (const auto [nodeType, createNodeWithDrawStrategy] : logic.nodeCreators)
+                {
+                    if (nodeTypeFunctionalityMap.at(nodeType) != functionality)
+                    {
+                        continue;
+                    }
+
+                    if (ImGui::MenuItem(nodeType.c_str()))
+                    {
+                        addNode(createNodeWithDrawStrategy());
+                    }
+                }
+                ImGui::EndMenu();
+            }
+        }
+        ImGui::EndMenu();
     }
 }
 
@@ -73,27 +137,27 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
 {
     TexturesOperationsProxySingleton::instance()->DestroyTextures();
 
-    showFPS();
-    ImGui::SameLine();
-    ImGui::Separator();
-
-    ed::SetCurrentEditor(m_Context);
-
+    ed::SetCurrentEditor(context);
     ed::Begin("Editor", ImVec2(0.0, 0.0f));
 
+    ed::Suspend();
     drawMenu();
+    SaveNewFileForm();
+    ProjectLoading();
+    ed::Resume();
 
-    auto cursorTopLeft = ImGui::GetCursorScreenPos();
+    pinsVisualLinking();
+    nodesPopup();
 
-    std::ranges::for_each(m_logic.getNodesDrawStrategies(),
+    std::ranges::for_each(logic.getNodesDrawStrategies(),
                           [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
 
-    if (m_logic.innerNodesStateChanged() && logicFinished)
+    if (logic.innerNodesStateChanged() && logicFinished)
     {
         logicFinished = false;
         std::thread t{[this]() {
-            m_logic.propagateEvaluationThroughTheNodes();
-            m_logic.removeDirtyFlagsFromNodes();
+            logic.propagateEvaluationThroughTheNodes();
+            logic.removeDirtyFlagsFromNodes();
             logicFinished = true;
         }};
 
@@ -102,34 +166,75 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
 
     drawingLinks();
 
-    pinsVisualLinking();
-
     handleDeleting();
-    ImGui::SetCursorScreenPos(cursorTopLeft);
 
     ed::End(); // Editor
 
-    if (m_FirstFrame)
+    if (isFirstFrame)
         ed::NavigateToContent(0.0f);
 
     ed::SetCurrentEditor(nullptr);
 
-    m_FirstFrame = false;
+    isFirstFrame = false;
 }
 
-void LowCodeForITKApplication::drawMenu()
+void LowCodeForITKApplication::ProjectLoading()
 {
-    ed::Suspend();
-    ImGui::Begin("menu");
-    buttonForTriggeringEvaluation();
-    buttonForNodesModal();
-    ButtonForSaving();
-    ButtonForLoading();
+    if (loadProject)
+    {
+        browser.Display();
+        if (browser.HasSelected())
+        {
+            const auto fileName = browser.GetSelected().filename().string();
+            if (fileName != currentProjectFileName)
+            {
+                deserialize(fileName);
+                currentProjectFileName = fileName;
+            }
+        }
+        loadProject = browser.IsOpened();
+    }
+}
 
-    ImGuiDemoModal();
+void LowCodeForITKApplication::SaveNewFileForm()
+{
+    if (!inputFileName)
+    {
+        return;
+    }
 
-    ImGui::End();
-    ed::Resume();
+    auto clean = [&]() {
+        inputFileName = false;
+        ImGui::CloseCurrentPopup();
+    };
+
+    if (!ImGui::IsPopupOpen(inputFileModalName.c_str()))
+    {
+        ImGui::OpenPopup(inputFileModalName.c_str());
+    }
+
+    if (ImGui::BeginPopupModal(inputFileModalName.c_str()))
+    {
+        constexpr int size = 100;
+        char          fileNameBuffor[100];
+        strcpy(fileNameBuffor, newFileName.data());
+
+        ImGui::InputText("fileName", fileNameBuffor, size);
+        newFileName = fileNameBuffor;
+
+        if (ImGui::Button("save"))
+        {
+            serialize(newFileName + projectFileExtention);
+            clean();
+        }
+
+        if (ImGui::Button("cancel"))
+        {
+            clean();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 void LowCodeForITKApplication::ImGuiDemoModal()
@@ -146,31 +251,67 @@ void LowCodeForITKApplication::ImGuiDemoModal()
     }
 }
 
-void LowCodeForITKApplication::buttonForNodesModal()
+void LowCodeForITKApplication::nodesPopup()
 {
-    if (ImGui::Button("Nodes Drawer"))
+    ed::Suspend();
+    if (!ImGui::IsPopupOpen(nodesDrawerPopupName.c_str()))
     {
-        ImGui::OpenPopup("NodesDrawerModal");
+        pinInitializingNodeCreationID = std::nullopt;
     }
 
-    if (ImGui::BeginPopupModal("NodesDrawerModal"))
+    if (ImGui::BeginPopup(nodesDrawerPopupName.c_str()))
     {
-
-        for (auto [nodeType, createNodeWithDrawStrategy] : m_logic.m_nodeCreators)
+        SubMenuNodes();
+        if (pinInitializingNodeCreationID.has_value())
         {
-            if (ImGui::Button(nodeType.c_str()))
+            if (ImGui::BeginMenu("CompatibleNodes"))
             {
-                auto nodeWithDrawStrategy = createNodeWithDrawStrategy();
-                m_logic.addNode(std::move(nodeWithDrawStrategy->node));
-                m_logic.addNodeDrawStrategy(std::move(nodeWithDrawStrategy->drawStrategy));
-                ImGui::CloseCurrentPopup();
+                for (const auto [functionality, functionalityName] : functionalityNameMap)
+                {
+                    if (ImGui::BeginMenu(functionalityName.c_str()))
+                    {
+                        for (const auto [nodeType, createNodeWithDrawStrategy] : logic.nodeCreators)
+                        {
+                            if (nodeTypeFunctionalityMap.at(nodeType) != functionality)
+                            {
+                                continue;
+                            }
+                            auto   mockNode = createNodeWithDrawStrategy();
+                            IDType otherPinId;
+                            if (std::ranges::any_of(
+                                    logic.isInputPin(pinInitializingNodeCreationID.value()) ? mockNode->node->outputPins
+                                                                                            : mockNode->node->inputPins,
+                                    [&](const std::unique_ptr<Pin> &pin) {
+                                        auto isSame =
+                                            logic.getPinType(pinInitializingNodeCreationID.value()) == pin->typeName;
+                                        if (isSame)
+                                        {
+                                            otherPinId = pin->id;
+                                        }
+                                        return isSame;
+                                    }))
+                            {
+                                if (ImGui::MenuItem(nodeType.c_str()))
+                                {
+                                    addNode(std::move(mockNode));
+                                    auto pinIdsPair = std::make_pair(otherPinId, pinInitializingNodeCreationID.value());
+                                    if (logic.isLinkPossible(pinIdsPair))
+                                    {
+                                        logic.createLink(pinIdsPair);
+                                    }
+                                }
+                            }
+                        }
+                        ImGui::EndMenu();
+                    }
+                }
+                ImGui::EndMenu();
             }
         }
-
-        if (ImGui::Button("Close"))
-            ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+
+    ed::Resume();
 }
 
 void LowCodeForITKApplication::handleDeleting()
@@ -183,7 +324,7 @@ void LowCodeForITKApplication::handleDeleting()
         {
             if (ed::AcceptDeletedItem())
             {
-                m_logic.deleteNode(deletedNodeId.Get());
+                logic.deleteNode(deletedNodeId.Get());
             }
         }
     }
@@ -197,7 +338,7 @@ void LowCodeForITKApplication::linksDeletion()
     {
         if (ed::AcceptDeletedItem())
         {
-            m_logic.deleteLink(deletedLinkId.Get());
+            logic.deleteLink(deletedLinkId.Get());
         }
     }
 }
@@ -211,12 +352,39 @@ void LowCodeForITKApplication::showFPS()
 
 void LowCodeForITKApplication::drawingLinks()
 {
-    for (auto &linkInfo : m_logic.getLinks())
+    for (auto &linkInfo : logic.getLinks())
         ed::Link(linkInfo->id, linkInfo->pinIds.first, linkInfo->pinIds.second);
+}
+
+void LowCodeForITKApplication::addNode(std::unique_ptr<NodeWithDrawStrategy> nodeWithDrawStrategy)
+{
+    auto mpos = ImGui::GetIO().MousePos;
+    ed::SetNodePosition(nodeWithDrawStrategy->node->id, ed::ScreenToCanvas(mpos));
+
+    logic.addNode(std::move(nodeWithDrawStrategy->node));
+    logic.addNodeDrawStrategy(std::move(nodeWithDrawStrategy->drawStrategy));
 }
 
 void LowCodeForITKApplication::pinsVisualLinking()
 {
+
+    auto showLabel = [](const char *label, ImColor color) {
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetTextLineHeight());
+        auto size = ImGui::CalcTextSize(label);
+
+        auto padding = ImGui::GetStyle().FramePadding;
+        auto spacing = ImGui::GetStyle().ItemSpacing;
+
+        ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(spacing.x, -spacing.y));
+
+        auto rectMin = ImGui::GetCursorScreenPos() - padding;
+        auto rectMax = ImGui::GetCursorScreenPos() + size + padding;
+
+        auto drawList = ImGui::GetWindowDrawList();
+        drawList->AddRectFilled(rectMin, rectMax, color, size.y * 0.15f);
+        ImGui::TextUnformatted(label);
+    };
+
     if (ed::BeginCreate())
     {
         ed::PinId inputPinId, outputPinId;
@@ -224,11 +392,11 @@ void LowCodeForITKApplication::pinsVisualLinking()
         {
             IDType logicInputPinId  = static_cast<IDType>(inputPinId.Get());
             IDType logicOutputPinId = static_cast<IDType>(outputPinId.Get());
-            if (m_logic.isLinkPossible(std::make_pair(logicInputPinId, logicOutputPinId)))
+            if (logic.isLinkPossible(std::make_pair(logicInputPinId, logicOutputPinId)))
             {
-                if (ed::AcceptNewItem())
+                if (ed::AcceptNewItem(ImColor(0, 255, 0), 2.0f))
                 {
-                    m_logic.createLink(std::make_pair(logicInputPinId, logicOutputPinId));
+                    logic.createLink(std::make_pair(logicInputPinId, logicOutputPinId));
                 }
             }
             else
@@ -236,6 +404,17 @@ void LowCodeForITKApplication::pinsVisualLinking()
                 ed::RejectNewItem(ImColor(255, 0, 0), 2.0f);
             }
         }
+
+        if (ed::QueryNewNode(&inputPinId, ImColor(0, 255, 0), 2.0f))
+        {
+            showLabel("+ Create Node", ImColor(32, 45, 32, 180));
+
+            if (ed::AcceptNewItem())
+            {
+                pinInitializingNodeCreationID = std::make_optional(static_cast<IDType>(inputPinId.Get()));
+                ImGui::OpenPopup(nodesDrawerPopupName.c_str());
+            }
+        }
     }
-    ed::EndCreate(); // Wraps up object creation action handling.
+    ed::EndCreate();
 }

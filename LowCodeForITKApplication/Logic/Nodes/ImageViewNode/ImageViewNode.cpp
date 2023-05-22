@@ -6,7 +6,7 @@
 #include <itkImageIterator.h>
 #include <itkMultiplyImageFilter.h>
 
-ImageViewNode::ImageViewNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+ImageViewNode::ImageViewNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
     inputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
     imagePin = inputPins.back().get();

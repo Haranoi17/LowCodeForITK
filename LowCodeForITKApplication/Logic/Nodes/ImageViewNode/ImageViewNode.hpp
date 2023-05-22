@@ -14,7 +14,7 @@ class ImageViewNode : public Node
     using ImageType = itk::Image<PixelType, 2>;
 
     inline static std::string typeName = "ImageViewNode";
-    ImageViewNode(UniqueIDProvider *idProvider, std::string_view name = typeName);
+    ImageViewNode(UniqueIDProvider *idProvider);
     ImageViewNode() = default;
 
     void calculate() override;

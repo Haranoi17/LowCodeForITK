@@ -6,7 +6,7 @@
 #include <itkImageIterator.h>
 #include <itkMultiplyImageFilter.h>
 
-RGBANode::RGBANode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+RGBANode::RGBANode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
     outputPins.emplace_back(std::make_unique<RGBAPin>(idProvider, this));
     rgbaPin = outputPins.back().get();

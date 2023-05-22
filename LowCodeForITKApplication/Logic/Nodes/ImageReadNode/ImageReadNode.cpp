@@ -3,7 +3,7 @@
 
 #include <itkImageFileReader.h>
 
-ImageReadNode::ImageReadNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+ImageReadNode::ImageReadNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
     outputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
     imagePin = outputPins.back().get();

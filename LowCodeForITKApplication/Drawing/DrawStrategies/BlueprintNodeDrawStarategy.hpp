@@ -22,5 +22,7 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
     virtual void synchronizeLogicalNodePositionToEditor();
     virtual void setDeserializedPositionInEditior();
 
+    virtual ImColor getHeaderColor();
+
     ax::NodeEditor::Utilities::BlueprintNodeBuilder nodeBuilder;
 };

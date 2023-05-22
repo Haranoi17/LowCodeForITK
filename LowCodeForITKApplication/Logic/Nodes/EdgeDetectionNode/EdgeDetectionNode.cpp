@@ -19,7 +19,7 @@
 
 #include <limits>
 
-EdgeDetectionNode::EdgeDetectionNode(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+EdgeDetectionNode::EdgeDetectionNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
     inputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
     inputImagePin = inputPins.back().get();
