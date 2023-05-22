@@ -16,5 +16,6 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: 'Yes'
 BinPackArguments: 'false'
 BinPackParameters: 'true'
+ColumnLimit: '150'
 
 ...

@@ -37,7 +37,7 @@ void Logic::updateCreators()
 void Logic::chainReaction(Pin *outputPin)
 {
     outputPin->calculate();
-    ranges::for_each(outputPin->connectedPins, [&](Pin *inputPin) {
+    std::ranges::for_each(outputPin->connectedPins, [&](Pin *inputPin) {
         inputPin->payload = outputPin->payload;
 
         const auto node = inputPin->parentNode;
@@ -77,8 +77,8 @@ bool Logic::isLinkPossible(std::pair<IDType, IDType> pinIdPair)
     bool areSameTypes          = firstPin->typeName == secondPin->typeName;
     bool arePinsInputAndOutput = isInputPin(firstPin) != isInputPin(secondPin);
 
-    return !triesToConnectItself && !arePinsAlreadyConnected(firstPin, secondPin) &&
-           !arePinsOnSameNode(firstPin, secondPin) && arePinsInputAndOutput && areSameTypes;
+    return !triesToConnectItself && !arePinsAlreadyConnected(firstPin, secondPin) && !arePinsOnSameNode(firstPin, secondPin) &&
+           arePinsInputAndOutput && areSameTypes;
 }
 
 void Logic::createLink(std::pair<IDType, IDType> pinIdPair)
@@ -128,17 +128,13 @@ void Logic::deleteLink(IDType linkId)
     auto firstPin  = getPinById(linkInfo->pinIds.first);
     auto secondPin = getPinById(linkInfo->pinIds.second);
 
-    auto [removeBeginForFirst, removeEndForFirst] =
-        std::ranges::remove_if(firstPin->connectedPins, [&secondPin](const Pin *connectedPinToFirst) {
-            return connectedPinToFirst->id == secondPin->id;
-        });
+    auto [removeBeginForFirst, removeEndForFirst] = std::ranges::remove_if(
+        firstPin->connectedPins, [&secondPin](const Pin *connectedPinToFirst) { return connectedPinToFirst->id == secondPin->id; });
 
     firstPin->connectedPins.erase(removeBeginForFirst, removeEndForFirst);
 
-    auto [removeBeginForSecond, removeEndForSecond] =
-        std::ranges::remove_if(secondPin->connectedPins, [&firstPin](const Pin *connectedPinToSecond) {
-            return connectedPinToSecond->id == firstPin->id;
-        });
+    auto [removeBeginForSecond, removeEndForSecond] = std::ranges::remove_if(
+        secondPin->connectedPins, [&firstPin](const Pin *connectedPinToSecond) { return connectedPinToSecond->id == firstPin->id; });
 
     secondPin->connectedPins.erase(removeBeginForSecond, removeEndForSecond);
 
@@ -152,13 +148,11 @@ void Logic::deleteNode(IDType nodeId)
     auto nodePins = getPinsOnNode(getNodeById(nodeId));
 
     auto                    toPinLinks = [this](const Pin *pin) { return getPinLinks(pin); };
-    std::vector<LinkInfo *> nodeLinks =
-        nodePins | ranges::views::transform(toPinLinks) | ranges::actions::join | ranges::to_vector;
+    std::vector<LinkInfo *> nodeLinks  = nodePins | ranges::views::transform(toPinLinks) | ranges::actions::join | ranges::to_vector;
 
     ranges::for_each(nodeLinks, [&](LinkInfo *linkInfo) { deleteLink(linkInfo->id); });
 
-    auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] =
-        std::ranges::remove(nodeDrawStrategies, nodeId, &NodeDrawStrategy::nodeToDrawID);
+    auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] = std::ranges::remove(nodeDrawStrategies, nodeId, &NodeDrawStrategy::nodeToDrawID);
     nodeDrawStrategies.erase(beginRemoveDrawStrategy, endRemoveDrawStrategy);
 
     auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(nodes, nodeId, &Node::id);
@@ -249,10 +243,8 @@ void Logic::updatePinsAfterDeserialization()
     const auto &links = getLinks();
 
     std::ranges::for_each(pins, [&](Pin *currentPin) {
-        auto isCurrentPinInLink = [&](const auto &link) {
-            return currentPin->id == link->pinIds.first || currentPin->id == link->pinIds.second;
-        };
-        auto linksWithThisPin = links | std::views::filter(isCurrentPinInLink);
+        auto isCurrentPinInLink = [&](const auto &link) { return currentPin->id == link->pinIds.first || currentPin->id == link->pinIds.second; };
+        auto linksWithThisPin   = links | std::views::filter(isCurrentPinInLink);
 
         auto updateCurrentPinConncetedPins = [&](const auto &link) {
             auto otherPinId = currentPin->id == link->pinIds.first ? link->pinIds.second : link->pinIds.first;
@@ -288,8 +280,7 @@ Node *Logic::getNodeById(IDType nodeId) const
 
 std::vector<LinkInfo *> Logic::getPinLinks(const Pin *pin) const
 {
-    return links | ranges::views::transform(ToNonOwningPointer()) |
-           ranges::views::filter([pin](const LinkInfo *linkInfo) {
+    return links | ranges::views::transform(ToNonOwningPointer()) | ranges::views::filter([pin](const LinkInfo *linkInfo) {
                return pin->id == linkInfo->pinIds.first || pin->id == linkInfo->pinIds.second;
            }) |
            ranges::to_vector;
@@ -297,8 +288,7 @@ std::vector<LinkInfo *> Logic::getPinLinks(const Pin *pin) const
 
 bool Logic::arePinsAlreadyConnected(const Pin *first, const Pin *second) const
 {
-    return ranges::any_of(first->connectedPins,
-                          [&](const Pin *connectedPin) { return connectedPin->id == second->id; });
+    return ranges::any_of(first->connectedPins, [&](const Pin *connectedPin) { return connectedPin->id == second->id; });
 }
 
 bool Logic::arePinsOnSameNode(const Pin *first, const Pin *second) const
@@ -308,8 +298,7 @@ bool Logic::arePinsOnSameNode(const Pin *first, const Pin *second) const
 
 bool Logic::isInputPin(const Pin *pin) const
 {
-    return ranges::any_of(pin->parentNode->inputPins,
-                          [&](const std::unique_ptr<Pin> &nodePin) { return nodePin.get() == pin; });
+    return ranges::any_of(pin->parentNode->inputPins, [&](const std::unique_ptr<Pin> &nodePin) { return nodePin.get() == pin; });
 }
 
 const std::unique_ptr<Node> &Logic::getNodeWithPin(IDType pinId) const
@@ -321,8 +310,7 @@ const std::unique_ptr<Node> &Logic::getNodeWithPin(IDType pinId) const
 
 void Logic::cleanNonInputNodesPins()
 {
-    auto nonInputNodes{nodes |
-                       ranges::views::filter([&](std::unique_ptr<Node> &node) { return !isNodeAnInput(node.get()); })};
+    auto nonInputNodes{nodes | ranges::views::filter([&](std::unique_ptr<Node> &node) { return !isNodeAnInput(node.get()); })};
 
     std::ranges::for_each(nonInputNodes, [](std::unique_ptr<Node> &node) {
         std::ranges::for_each(node->inputPins, [](std::unique_ptr<Pin> &pin) { pin->payload.reset(); });

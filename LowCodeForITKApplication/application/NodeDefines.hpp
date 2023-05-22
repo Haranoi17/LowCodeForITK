@@ -15,6 +15,8 @@
 
 #include "Logic/UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 
+#include <concepts>
+
 enum class Functionality
 {
     Filtering,
@@ -35,6 +37,7 @@ template <typename NodeType>
 class SpecificNodeCreator : public NodeCreator
 {
   public:
+    ~SpecificNodeCreator() = default;
     std::unique_ptr<Node> createFullyFunctional(UniqueIDProvider *idProvider) override
     {
         return std::make_unique<NodeType>(idProvider);
@@ -55,29 +58,92 @@ class SpecificNodeCreator : public NodeCreator
 inline const std::map<Functionality, std::string> functionalityNameMap{
     {Functionality::Filtering, "Filtering"}, {Functionality::Input, "Input"}, {Functionality::Output, "Output"}};
 
-#define NODE_TYPE_TO_DRAW_STRATEGY_FACTORY_METHOD(NODETYPE) \
-    [](Node *nodePtr) { return std::make_unique<NODETYPE##DrawStrategy>(dynamic_cast<NODETYPE *>(nodePtr)); }
+template <typename T>
+concept Reflectable = requires() { T::typeName; };
 
-inline std::vector<std::string>                            registeredNodeTypes{};
-inline std::map<std::string, Functionality>                nodeTypeFunctionalityMap{};
-inline std::map<std::string, std::unique_ptr<NodeCreator>> nodeTypeNameToCreatorMap{};
-inline std::map<std::string, std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>>
-    nodeTypeNameToDrawStrategyCreatorMap{};
+template <typename T>
+concept NodeImplementation = requires() {
+                                 requires Reflectable<typename T::NodeType>;
+                                 T::DrawStrategyType;
+                                 T::functionality;
+                             };
 
-#define REGISTER_NEW_NODE(NODETYPE, FUNCTIONALITY)                                                                \
-                                                                                                                  \
-    registeredNodeTypes.push_back(NODETYPE::typeName);                                                            \
-    nodeTypeFunctionalityMap[NODETYPE::typeName]             = FUNCTIONALITY;                                     \
-    nodeTypeNameToCreatorMap[NODETYPE::typeName]             = std::make_unique<SpecificNodeCreator<NODETYPE>>(); \
-    nodeTypeNameToDrawStrategyCreatorMap[NODETYPE::typeName] = NODE_TYPE_TO_DRAW_STRATEGY_FACTORY_METHOD(NODETYPE);
-
-inline void RegisterNodes()
+template <Reflectable NodeTypeParam, typename DrawStrategyTypeParam, Functionality functionalityParam>
+struct Implementation
 {
-    REGISTER_NEW_NODE(RGBANode, Functionality::Filtering);
-    REGISTER_NEW_NODE(ImageViewNode, Functionality::Output);
-    REGISTER_NEW_NODE(GaussianBlurNode, Functionality::Filtering);
-    REGISTER_NEW_NODE(EdgeDetectionNode, Functionality::Filtering);
-    REGISTER_NEW_NODE(ImageReadNode, Functionality::Input);
-    REGISTER_NEW_NODE(FloatingPoinValueNode, Functionality::Input);
-    REGISTER_NEW_NODE(PercentageNode, Functionality::Input);
-}
+    using NodeType         = NodeTypeParam;
+    using DrawStrategyType = DrawStrategyTypeParam;
+
+    static constexpr Functionality functionality{functionalityParam};
+};
+
+using DrawStrategyCreator = std::function<std::unique_ptr<NodeDrawStrategy>(Node *)>;
+
+template <NodeImplementation... Implementations>
+struct NodesGetter
+{
+    using TypeNameType = decltype(Node::typeName);
+
+    auto getRegisteredNodeTypeNames()
+    {
+        std::vector<TypeNameType> typeNamesVec{};
+        (typeNamesVec.emplace_back(Implementations::NodeType::typeName), ...);
+        return typeNamesVec;
+    }
+
+    auto getMapOfNodeFunctionalities()
+    {
+        using pair = std::pair<TypeNameType, Functionality>;
+        std::map<TypeNameType, Functionality> map{};
+
+        (map.insert(pair{Implementations::NodeType::typeName, Implementations::functionality}), ...);
+        return map;
+    }
+
+    auto getMapOfNodeCreators()
+    {
+        using pair = std::pair<TypeNameType, std::unique_ptr<NodeCreator>>;
+        auto map   = std::map<TypeNameType, std::unique_ptr<NodeCreator>>{};
+
+        (map.insert(pair{Implementations::NodeType::typeName, std::make_unique<SpecificNodeCreator<typename Implementations::NodeType>>()}), ...);
+        return map;
+    }
+
+    auto getMapOfDrawStrategyCreators()
+    {
+        using pair = std::pair<TypeNameType, DrawStrategyCreator>;
+
+        auto map = std::map<TypeNameType, DrawStrategyCreator>{};
+
+        (map.insert(pair{
+             Implementations::NodeType::typeName,
+             [](Node *nodePtr) { return std::make_unique<Implementations::DrawStrategyType>(dynamic_cast<Implementations::NodeType *>(nodePtr)); }}),
+         ...);
+
+        return map;
+    }
+
+    auto getMockedNodes()
+    {
+        auto vec = std::vector<std::unique_ptr<Node>>{};
+
+        (vec.emplace_back(getMapOfNodeCreators().at(Implementations::NodeType::typeName)->createMocked()), ...);
+
+        return vec;
+    }
+};
+
+inline NodesGetter<Implementation<RGBANode, RGBANodeDrawStrategy, Functionality::Filtering>,
+                   Implementation<ImageViewNode, ImageViewNodeDrawStrategy, Functionality::Output>,
+                   Implementation<GaussianBlurNode, GaussianBlurNodeDrawStrategy, Functionality::Filtering>,
+                   Implementation<EdgeDetectionNode, EdgeDetectionNodeDrawStrategy, Functionality::Filtering>,
+                   Implementation<ImageReadNode, ImageReadNodeDrawStrategy, Functionality::Input>,
+                   Implementation<FloatingPoinValueNode, FloatingPoinValueNodeDrawStrategy, Functionality::Input>,
+                   Implementation<PercentageNode, PercentageNodeDrawStrategy, Functionality::Input>>
+    nodesGetter;
+
+inline auto registeredNodeTypes{nodesGetter.getRegisteredNodeTypeNames()};
+inline auto nodeTypeFunctionalityMap{nodesGetter.getMapOfNodeFunctionalities()};
+inline auto nodeTypeNameToCreatorMap{nodesGetter.getMapOfNodeCreators()};
+inline auto nodeTypeNameToDrawStrategyCreatorMap{nodesGetter.getMapOfDrawStrategyCreators()};
+inline auto mockedNodes{nodesGetter.getMockedNodes()};

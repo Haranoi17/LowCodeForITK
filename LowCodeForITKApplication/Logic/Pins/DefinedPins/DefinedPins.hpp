@@ -2,22 +2,22 @@
 #include "Logic/Pins/Pin.hpp"
 #include <optional>
 
-#define NewPinType(NAME, NAME_STR)                                                                                     \
-    struct NAME : public Pin                                                                                           \
-    {                                                                                                                  \
-        inline static std::string typeName{NAME_STR};                                                                  \
-        NAME(UniqueIDProvider *idProvider, Node *parentNode,                                                           \
-             std::optional<std::string_view> optionalContextName = std::nullopt, std::string_view typeName = NAME_STR) \
-            : Pin{idProvider, parentNode, optionalContextName, typeName}                                               \
-        {                                                                                                              \
-        }                                                                                                              \
-        NAME() = default;                                                                                              \
+#define NewPinType(NAME)                                                                                                         \
+    struct NAME : public Pin                                                                                                     \
+    {                                                                                                                            \
+        inline static std::string typeName{#NAME};                                                                               \
+        NAME(UniqueIDProvider *idProvider, Node *parentNode, std::optional<std::string_view> optionalContextName = std::nullopt, \
+             std::string_view typeName = #NAME)                                                                                  \
+            : Pin{idProvider, parentNode, optionalContextName, typeName}                                                         \
+        {                                                                                                                        \
+        }                                                                                                                        \
+        NAME() = default;                                                                                                        \
     };
 
-NewPinType(ImagePin, "ImagePin");
-NewPinType(RGBAPin, "RGBAPin");
-NewPinType(PercentagePin, "PercentagePin");
-NewPinType(FloatingPointValuePin, "FloatingPointPin");
+NewPinType(ImagePin);
+NewPinType(RGBAPin);
+NewPinType(PercentagePin);
+NewPinType(FloatingPointValuePin);
 
 inline std::map<std::string, std::function<std::unique_ptr<Pin>()>> typeNameToPinObject{
     {ImagePin::typeName, []() { return std::make_unique<ImagePin>(); }},

@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <fstream>
 #define IMGUI_DEFINE_MATH_OPERATORS
+#include "Logic/utilities.hpp"
 #include <imgui_internal.h>
-#include <ranges>
+#include <range\v3\all.hpp>
 
 std::string nodesDrawerPopupName = "NodesDrawerPopup";
 std::string inputFileModalName   = "InputFileNameModal";
@@ -39,7 +40,6 @@ void LowCodeForITKApplication::deserialize(std::string_view fileName)
 
 void LowCodeForITKApplication::OnStart()
 {
-    RegisterNodes();
     logic.updateCreators();
 
     config.SettingsFile = settingsFile;
@@ -149,8 +149,7 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
     pinsVisualLinking();
     nodesPopup();
 
-    std::ranges::for_each(logic.getNodesDrawStrategies(),
-                          [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
+    std::ranges::for_each(logic.getNodesDrawStrategies(), [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
 
     if (logic.innerNodesStateChanged() && logicFinished)
     {
@@ -256,49 +255,61 @@ void LowCodeForITKApplication::nodesPopup()
     ed::Suspend();
     if (!ImGui::IsPopupOpen(nodesDrawerPopupName.c_str()))
     {
-        pinInitializingNodeCreationID = std::nullopt;
+        dragPinID = std::nullopt;
     }
 
     if (ImGui::BeginPopup(nodesDrawerPopupName.c_str()))
     {
         SubMenuNodes();
-        if (pinInitializingNodeCreationID.has_value())
+
+        if (dragPinID.has_value())
         {
             if (ImGui::BeginMenu("CompatibleNodes"))
             {
+                auto isDragPinInput       = logic.isInputPin(dragPinID.value());
+                auto dragPinType          = logic.getPinType(dragPinID.value());
+                auto nonOwningMockedNodes = mockedNodes | std::views::transform(ToNonOwningPointer());
+                auto compatibleNodes      = nonOwningMockedNodes | ranges::view::filter([&](const Node *node) {
+                                           const auto &pinsToCheck = isDragPinInput ? node->outputPins : node->inputPins;
+                                           return ranges::contains(pinsToCheck, dragPinType, &Pin::typeName);
+                                       }) |
+                                       ranges::to_vector;
+
                 for (const auto [functionality, functionalityName] : functionalityNameMap)
                 {
-                    if (ImGui::BeginMenu(functionalityName.c_str()))
+                    auto nodesWithCurrentFunctionality =
+                        compatibleNodes |
+                        ranges::views::filter([&](const Node *node) { return nodeTypeFunctionalityMap.at(node->typeName) == functionality; }) |
+                        ranges::to_vector;
+
+                    if (const auto shouldEnableMenu = !nodesWithCurrentFunctionality.empty();
+                        ImGui::BeginMenu(functionalityName.c_str(), shouldEnableMenu))
                     {
-                        for (const auto [nodeType, createNodeWithDrawStrategy] : logic.nodeCreators)
+                        for (const auto &currFunNode : nodesWithCurrentFunctionality)
                         {
-                            if (nodeTypeFunctionalityMap.at(nodeType) != functionality)
+                            auto nodeType = currFunNode->typeName;
+
+                            if (ImGui::MenuItem(nodeType.c_str()))
                             {
-                                continue;
-                            }
-                            auto   mockNode = createNodeWithDrawStrategy();
-                            IDType otherPinId;
-                            if (std::ranges::any_of(
-                                    logic.isInputPin(pinInitializingNodeCreationID.value()) ? mockNode->node->outputPins
-                                                                                            : mockNode->node->inputPins,
-                                    [&](const std::unique_ptr<Pin> &pin) {
-                                        auto isSame =
-                                            logic.getPinType(pinInitializingNodeCreationID.value()) == pin->typeName;
-                                        if (isSame)
-                                        {
-                                            otherPinId = pin->id;
-                                        }
-                                        return isSame;
-                                    }))
-                            {
-                                if (ImGui::MenuItem(nodeType.c_str()))
+                                auto nodeWithDrawStrategy = logic.nodeCreators.at(nodeType)();
+
+                                const auto &pinsToIterate =
+                                    isDragPinInput ? nodeWithDrawStrategy->node->outputPins : nodeWithDrawStrategy->node->inputPins;
+
+                                std::vector<std::pair<IDType, std::string>> pairs =
+                                    pinsToIterate |
+                                    ranges::views::transform([](const std::unique_ptr<Pin> &pin) { return std::make_pair(pin->id, pin->typeName); }) |
+                                    ranges::to_vector;
+
+                                auto result = ranges::find_if(pairs, [&](const auto &pair) { return pair.second == dragPinType; });
+
+                                auto otherID = result->first;
+
+                                addNode(std::move(nodeWithDrawStrategy));
+                                auto pinIdsPair = std::make_pair(otherID, dragPinID.value());
+                                if (logic.isLinkPossible(pinIdsPair))
                                 {
-                                    addNode(std::move(mockNode));
-                                    auto pinIdsPair = std::make_pair(otherPinId, pinInitializingNodeCreationID.value());
-                                    if (logic.isLinkPossible(pinIdsPair))
-                                    {
-                                        logic.createLink(pinIdsPair);
-                                    }
+                                    logic.createLink(pinIdsPair);
                                 }
                             }
                         }
@@ -411,7 +422,7 @@ void LowCodeForITKApplication::pinsVisualLinking()
 
             if (ed::AcceptNewItem())
             {
-                pinInitializingNodeCreationID = std::make_optional(static_cast<IDType>(inputPinId.Get()));
+                dragPinID = std::make_optional(static_cast<IDType>(inputPinId.Get()));
                 ImGui::OpenPopup(nodesDrawerPopupName.c_str());
             }
         }

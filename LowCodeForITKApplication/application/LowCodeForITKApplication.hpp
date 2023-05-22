@@ -59,7 +59,7 @@ struct LowCodeForITKApplication : public Application
     std::string        newFileName;
 
     bool                  loadProject{false};
-    std::optional<IDType> pinInitializingNodeCreationID;
+    std::optional<IDType> dragPinID;
 
     std::atomic<bool> logicFinished{true};
 };
