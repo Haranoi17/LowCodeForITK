@@ -14,16 +14,18 @@ target_link_libraries(${TargetName} PRIVATE
     imgui_node_editor::application
     imgui_node_editor::stb_image
     imgui-filebrowser::imgui-filebrowser
+    nlohmann_json::nlohmann_json
+    range-v3::range-v3
     ${ITK_LIBRARIES}
 )
 
 target_include_directories(${TargetName} PRIVATE 
     "${CMAKE_CURRENT_SOURCE_DIR}/"
-    "${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/"
-    "${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/"
-    "${CMAKE_INSTALL_PREFIX}/../ITK/include/"
-    "${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include"
-    "${CMAKE_INSTALL_PREFIX}/../Range-v3/include"
+    #"${CMAKE_INSTALL_PREFIX}/../imgui_node_editor/include/"
+    #"${CMAKE_INSTALL_PREFIX}/../imgui-filebrowser/include/"
+    #"${CMAKE_INSTALL_PREFIX}/../ITK/include/"
+    #"${CMAKE_INSTALL_PREFIX}/../nlohmann_json/include"
+    #"${CMAKE_INSTALL_PREFIX}/../Range-v3/include"
 )
 
 if(MSVC)

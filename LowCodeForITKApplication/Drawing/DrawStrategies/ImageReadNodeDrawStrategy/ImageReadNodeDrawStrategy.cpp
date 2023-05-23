@@ -30,7 +30,11 @@ void ImageReadNodeDrawStrategy::nodeSpecificFunctionalitiesBeforeNodeEnd()
             pathAsString.push_back(wideChar);
         }
 
-        m_imageViewNode->imagePath = pathAsString;
+        if (m_imageViewNode->imagePath != pathAsString)
+        {
+            m_imageViewNode->imagePath = pathAsString;
+            m_imageViewNode->dirty     = true;
+        }
     };
 }
 

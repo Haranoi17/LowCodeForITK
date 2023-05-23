@@ -5,19 +5,24 @@
 #include <itkImage.h>
 #include <itkRGBAPixel.h>
 
-class SampleNodeForAutomation : public Node
+class ImageSaveNode : public Node
 {
   public:
     using PixelType = itk::RGBAPixel<unsigned char>;
     using ImageType = itk::Image<PixelType, 2>;
 
-    inline static std::string typeName = "SampleNodeForAutomation";
-    SampleNodeForAutomation(UniqueIDProvider *idProvider);
-    SampleNodeForAutomation() = default;
+    inline static std::string typeName = "ImageSaveNode";
+    ImageSaveNode(UniqueIDProvider *idProvider);
+    ImageSaveNode() = default;
 
     void calculate() override;
-    void populateOutputPins() override;
 
     json serialize() override;
     void deserialize(json data) override;
+
+    void save();
+
+    std::string        fileName{};
+    ImageType::Pointer imageToSave;
+    Pin               *imagePin{};
 };

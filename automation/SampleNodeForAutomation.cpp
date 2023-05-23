@@ -1,7 +1,7 @@
 #include "SampleNodeForAutomation.hpp"
 #include "Logic/Pins/DefinedPins/DefinedPins.hpp"
 
-SampleNodeForAutomation::SampleNodeForAutomation(UniqueIDProvider *idProvider, std::string_view name) : Node{idProvider, name}
+SampleNodeForAutomation::SampleNodeForAutomation(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
 }
 
@@ -14,6 +14,14 @@ void SampleNodeForAutomation::populateOutputPins()
 {
 }
 
+json SampleNodeForAutomation::serialize()
+{
+    json serializedNode = Node::serialize();
+    //Insert serialization here eg. serializedNode["value"] = value;
+    return serializedNode;
+}
+
 void SampleNodeForAutomation::deserialize(json data)
 {
+    Node::deserialize(data);
 }

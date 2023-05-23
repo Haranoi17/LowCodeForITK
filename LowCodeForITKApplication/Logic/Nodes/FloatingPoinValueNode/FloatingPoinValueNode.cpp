@@ -12,8 +12,17 @@ void FloatingPoinValueNode::populateOutputPins()
     valuePin->payload = value;
 }
 
+json FloatingPoinValueNode::serialize()
+{
+    json serialzedNode     = Node::serialize();
+    serialzedNode["value"] = value;
+
+    return serialzedNode;
+}
+
 void FloatingPoinValueNode::deserialize(json data)
 {
     Node::deserialize(data);
+    value    = data["value"];
     valuePin = outputPins.at(0).get();
 }

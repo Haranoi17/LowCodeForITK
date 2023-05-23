@@ -3,6 +3,7 @@
 #include "Drawing/DrawStrategies/FloatingPoinValueNodeDrawStrategy/FloatingPoinValueNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/GaussianBlurNodeDrawStrategy/GaussianBlurNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/ImageReadNodeDrawStrategy/ImageReadNodeDrawStrategy.hpp"
+#include "Drawing/DrawStrategies/ImageSaveNodeDrawStrategy/ImageSaveNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/ImageViewNodeDrawStrategy/ImageViewNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/RGBANodeDrawStrategy/RGBANodeDrawStrategy.hpp"
 
@@ -10,6 +11,7 @@
 #include "Logic/Nodes/FloatingPoinValueNode/FloatingPoinValueNode.hpp"
 #include "Logic/Nodes/GaussianBlurNode/GaussianBlurNode.hpp"
 #include "Logic/Nodes/ImageReadNode/ImageReadNode.hpp"
+#include "Logic/Nodes/ImageSaveNode/ImageSaveNode.hpp"
 #include "Logic/Nodes/ImageViewNode/ImageViewNode.hpp"
 #include "Logic/Nodes/RGBANode/RGBANode.hpp"
 
@@ -133,13 +135,15 @@ struct NodesGetter
     }
 };
 
-inline NodesGetter<Implementation<RGBANode, RGBANodeDrawStrategy, Functionality::Filtering>,
+inline NodesGetter<Implementation<RGBANode, RGBANodeDrawStrategy, Functionality::Input>,
                    Implementation<ImageViewNode, ImageViewNodeDrawStrategy, Functionality::Output>,
                    Implementation<GaussianBlurNode, GaussianBlurNodeDrawStrategy, Functionality::Filtering>,
                    Implementation<EdgeDetectionNode, EdgeDetectionNodeDrawStrategy, Functionality::Filtering>,
                    Implementation<ImageReadNode, ImageReadNodeDrawStrategy, Functionality::Input>,
                    Implementation<FloatingPoinValueNode, FloatingPoinValueNodeDrawStrategy, Functionality::Input>,
-                   Implementation<PercentageNode, PercentageNodeDrawStrategy, Functionality::Input>>
+                   Implementation<PercentageNode, PercentageNodeDrawStrategy, Functionality::Input>,
+                   Implementation<TintNode, TintNodeDrawStrategy, Functionality::Filtering>,
+                   Implementation<ImageSaveNode, ImageSaveNodeDrawStrategy, Functionality::Output>>
     nodesGetter;
 
 inline auto registeredNodeTypes{nodesGetter.getRegisteredNodeTypeNames()};

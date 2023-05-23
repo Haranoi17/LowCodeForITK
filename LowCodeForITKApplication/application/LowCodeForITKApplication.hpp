@@ -4,7 +4,7 @@
 #include "Logic/UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 #include "imgui_node_editor.h"
 #include <application.h>
-#include <imgui-filebrowser/imfilebrowser.h>
+#include <imfilebrowser.h>
 
 #include <atomic>
 namespace ed = ax::NodeEditor;
@@ -60,6 +60,7 @@ struct LowCodeForITKApplication : public Application
 
     bool                  loadProject{false};
     std::optional<IDType> dragPinID;
+    std::optional<ImVec2> mousePosAtNodesPopupOpened;
 
     std::atomic<bool> logicFinished{true};
 };

@@ -3,3 +3,4 @@ buildExternals
 buildScripts
 .vs
 .vscode
+out

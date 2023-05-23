@@ -5,6 +5,7 @@
 #include <itkImageDuplicator.h>
 #include <itkImageIterator.h>
 #include <itkMultiplyImageFilter.h>
+#include <itkNumericTraits.h>
 
 RGBANode::RGBANode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
@@ -68,21 +69,31 @@ void TintNode::calculate()
 
     itk::ImageRegionIterator<ImageType> it{imageCopy, imageCopy->GetRequestedRegion()};
 
-    PixelType modifiedColor;
-    modifiedColor.SetAlpha(color.GetAlpha());
-    modifiedColor.SetRed(percentage * color.GetRed());
-    modifiedColor.SetGreen(percentage * color.GetGreen());
-    modifiedColor.SetBlue(percentage * color.GetBlue());
+    constexpr auto maxPixelValue = itk::NumericTraits<ImageType::PixelType::ComponentType>::max();
+
+    static constexpr auto isOverflow = [](ImageType::PixelType::ComponentType pixelValue, ImageType::PixelType::ComponentType valueToAdd) {
+        return (valueToAdd > 0) && pixelValue > (maxPixelValue - valueToAdd);
+    };
+
+    static constexpr auto getNewPixelValue = [](ImageType::PixelType::ComponentType pixelValue, ImageType::PixelType::ComponentType valueToAdd) {
+        return isOverflow(pixelValue, valueToAdd) ? maxPixelValue : pixelValue + valueToAdd;
+    };
 
     for (it.GoToBegin(); !it.IsAtEnd(); ++it)
     {
         PixelType originalImagePixel = it.Value();
         PixelType modifiedImagePixel;
-        modifiedImagePixel.SetAlpha(originalImagePixel.GetAlpha());
-        modifiedImagePixel.SetRed((1.0f - percentage) * originalImagePixel.GetRed());
-        modifiedImagePixel.SetGreen((1.0f - percentage) * originalImagePixel.GetGreen());
-        modifiedImagePixel.SetBlue((1.0f - percentage) * originalImagePixel.GetBlue());
-        it.Set(modifiedImagePixel + modifiedColor);
+
+        PixelType::ComponentType alphaToAdd = color.GetAlpha() * percentage;
+        PixelType::ComponentType redToAdd   = color.GetRed() * percentage;
+        PixelType::ComponentType greenToAdd = color.GetGreen() * percentage;
+        PixelType::ComponentType blueToAdd  = color.GetBlue() * percentage;
+
+        modifiedImagePixel.SetAlpha(getNewPixelValue(originalImagePixel.GetAlpha(), alphaToAdd));
+        modifiedImagePixel.SetRed(getNewPixelValue(originalImagePixel.GetRed(), redToAdd));
+        modifiedImagePixel.SetGreen(getNewPixelValue(originalImagePixel.GetGreen(), greenToAdd));
+        modifiedImagePixel.SetBlue(getNewPixelValue(originalImagePixel.GetBlue(), blueToAdd));
+        it.Set(modifiedImagePixel);
     }
     processedImage = imageCopy;
 }

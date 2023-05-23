@@ -1,9 +1,8 @@
 #include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
 #include "Logic/Nodes/ImageReadNode/ImageReadNode.hpp"
 
+#include "imfilebrowser.h"
 #include "imgui.h"
-
-#include "imgui-filebrowser\imfilebrowser.h"
 
 struct ImageReadNodeDrawStrategy : public BlueprintNodeDrawStrategy
 {
@@ -16,4 +15,5 @@ struct ImageReadNodeDrawStrategy : public BlueprintNodeDrawStrategy
     ImageReadNode *m_imageViewNode;
 
     ImGui::FileBrowser m_filebrowser;
+    std::string        previousPath;
 };

@@ -7,12 +7,12 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "Logic/utilities.hpp"
 #include <imgui_internal.h>
-#include <range\v3\all.hpp>
+#include <range/v3/all.hpp>
 
 std::string nodesDrawerPopupName = "NodesDrawerPopup";
 std::string inputFileModalName   = "InputFileNameModal";
 
-std::string projectFileExtention = ".json";
+std::string projectFileExtention = ".project";
 
 void LowCodeForITKApplication::serialize(std::string_view fileName)
 {
@@ -24,17 +24,24 @@ void LowCodeForITKApplication::serialize(std::string_view fileName)
 
 void LowCodeForITKApplication::deserialize(std::string_view fileName)
 {
-    json json;
-
-    std::ifstream fstream;
-    fstream.open(fileName);
-    if (fstream.is_open())
+    try
     {
-        fstream >> json;
-        logic.deserialize(json);
-        logic.updateCreators();
-        logic.propagateEvaluationThroughTheNodes();
-        fstream.close();
+        json json;
+
+        std::ifstream fstream;
+        fstream.open(fileName);
+        if (fstream.is_open())
+        {
+            fstream >> json;
+            logic.deserialize(json);
+            logic.updateCreators();
+            logic.propagateEvaluationThroughTheNodes();
+            fstream.close();
+        }
+    }
+    catch (std::exception e)
+    {
+        std::cout << std::format("Could not load {}", fileName.data());
     }
 }
 
@@ -255,7 +262,8 @@ void LowCodeForITKApplication::nodesPopup()
     ed::Suspend();
     if (!ImGui::IsPopupOpen(nodesDrawerPopupName.c_str()))
     {
-        dragPinID = std::nullopt;
+        dragPinID                  = std::nullopt;
+        mousePosAtNodesPopupOpened = std::nullopt;
     }
 
     if (ImGui::BeginPopup(nodesDrawerPopupName.c_str()))
@@ -369,7 +377,7 @@ void LowCodeForITKApplication::drawingLinks()
 
 void LowCodeForITKApplication::addNode(std::unique_ptr<NodeWithDrawStrategy> nodeWithDrawStrategy)
 {
-    auto mpos = ImGui::GetIO().MousePos;
+    auto mpos = mousePosAtNodesPopupOpened.value_or(ImGui::GetIO().MousePos);
     ed::SetNodePosition(nodeWithDrawStrategy->node->id, ed::ScreenToCanvas(mpos));
 
     logic.addNode(std::move(nodeWithDrawStrategy->node));
@@ -422,7 +430,8 @@ void LowCodeForITKApplication::pinsVisualLinking()
 
             if (ed::AcceptNewItem())
             {
-                dragPinID = std::make_optional(static_cast<IDType>(inputPinId.Get()));
+                mousePosAtNodesPopupOpened = ImGui::GetIO().MousePos;
+                dragPinID                  = std::make_optional(static_cast<IDType>(inputPinId.Get()));
                 ImGui::OpenPopup(nodesDrawerPopupName.c_str());
             }
         }

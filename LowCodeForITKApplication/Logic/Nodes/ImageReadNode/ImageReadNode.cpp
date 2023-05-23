@@ -2,6 +2,7 @@
 #include "Logic/Pins/DefinedPins/DefinedPins.hpp"
 
 #include <itkImageFileReader.h>
+#include <itkImageRegion.h>
 
 ImageReadNode::ImageReadNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
@@ -16,7 +17,21 @@ void ImageReadNode::populateOutputPins()
         return;
     }
 
-    imagePin->payload = itk::ReadImage<ImageType>(imagePath);
+    try
+    {
+        imagePin->payload = itk::ReadImage<ImageType>(imagePath);
+    }
+    catch (std::exception e)
+    {
+        auto          mockImage = ImageType::New();
+        itk::Size<2U> size{};
+        size[0] = 256;
+        size[1] = 256;
+
+        mockImage->SetRegions(ImageType::SizeType(size));
+        mockImage->Allocate();
+        imagePin->payload = mockImage;
+    }
 }
 
 json ImageReadNode::serialize()
@@ -31,5 +46,5 @@ void ImageReadNode::deserialize(json data)
     Node::deserialize(data);
     imagePath = data["imagePath"];
 
-    imagePin = outputPins.back().get(); // this is baaaaad...
+    imagePin = outputPins.back().get();
 }

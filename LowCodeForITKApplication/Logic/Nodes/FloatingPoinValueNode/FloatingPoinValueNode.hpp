@@ -17,6 +17,7 @@ class FloatingPoinValueNode : public Node
 
     void populateOutputPins() override;
 
+    json serialize() override;
     void deserialize(json data) override;
 
     float value{};

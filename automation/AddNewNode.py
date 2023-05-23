@@ -38,6 +38,3 @@ def doMagic(output_dir, sample_files, replacements, append_to_file_name=""):
 
 doMagic(logic_file_dir, logic_sample_files, replace_values)
 doMagic(draw_strategy_dir, draw_sample_files, replace_values, append_to_file_name="DrawStrategy")
-
-        
-
