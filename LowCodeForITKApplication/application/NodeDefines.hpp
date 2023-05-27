@@ -1,3 +1,4 @@
+#include "Drawing/DrawStrategies/BinaryThresholdNodeDrawStrategy/BinaryThresholdNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
 #include "Drawing/DrawStrategies/EdgeDetectionNodeDrawStrategy/EdgeDetectionNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/FloatingPoinValueNodeDrawStrategy/FloatingPoinValueNodeDrawStrategy.hpp"
@@ -6,7 +7,9 @@
 #include "Drawing/DrawStrategies/ImageSaveNodeDrawStrategy/ImageSaveNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/ImageViewNodeDrawStrategy/ImageViewNodeDrawStrategy.hpp"
 #include "Drawing/DrawStrategies/RGBANodeDrawStrategy/RGBANodeDrawStrategy.hpp"
+#include "Drawing/DrawStrategies/RegistrationNodeDrawStrategy/RegistrationNodeDrawStrategy.hpp"
 
+#include "Logic/Nodes/BinaryThresholdNode/BinaryThresholdNode.hpp"
 #include "Logic/Nodes/EdgeDetectionNode/EdgeDetectionNode.hpp"
 #include "Logic/Nodes/FloatingPoinValueNode/FloatingPoinValueNode.hpp"
 #include "Logic/Nodes/GaussianBlurNode/GaussianBlurNode.hpp"
@@ -14,6 +17,7 @@
 #include "Logic/Nodes/ImageSaveNode/ImageSaveNode.hpp"
 #include "Logic/Nodes/ImageViewNode/ImageViewNode.hpp"
 #include "Logic/Nodes/RGBANode/RGBANode.hpp"
+#include "Logic/Nodes/RegistrationNode/RegistrationNode.hpp"
 
 #include "Logic/UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 
@@ -143,7 +147,9 @@ inline NodesGetter<Implementation<RGBANode, RGBANodeDrawStrategy, Functionality:
                    Implementation<FloatingPoinValueNode, FloatingPoinValueNodeDrawStrategy, Functionality::Input>,
                    Implementation<PercentageNode, PercentageNodeDrawStrategy, Functionality::Input>,
                    Implementation<TintNode, TintNodeDrawStrategy, Functionality::Filtering>,
-                   Implementation<ImageSaveNode, ImageSaveNodeDrawStrategy, Functionality::Output>>
+                   Implementation<ImageSaveNode, ImageSaveNodeDrawStrategy, Functionality::Output>,
+                   Implementation<RegistrationNode, RegistrationNodeDrawStrategy, Functionality::Filtering>,
+                   Implementation<BinaryThresholdNode, BinaryThresholdNodeDrawStrategy, Functionality::Filtering>>
     nodesGetter;
 
 inline auto registeredNodeTypes{nodesGetter.getRegisteredNodeTypeNames()};

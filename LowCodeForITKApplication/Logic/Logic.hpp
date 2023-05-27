@@ -28,7 +28,7 @@ class Logic : public Serializable
     void updateCreators();
 
     void propagateEvaluationThroughTheNodes();
-    void chainReaction(Pin *outputPin);
+    void chainReaction(Pin *outputPin, bool clear = true);
 
     void deleteLink(IDType linkId);
     void deleteNode(IDType nodeId);
@@ -55,6 +55,8 @@ class Logic : public Serializable
     void deserialize(json data) override;
 
   private:
+    std::vector<IDType> alreadyRecalculatedNodes{};
+
     json serializeLinks();
 
     json serializeNodes();

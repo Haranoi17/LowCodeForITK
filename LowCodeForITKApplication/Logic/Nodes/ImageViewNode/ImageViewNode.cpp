@@ -15,6 +15,10 @@ ImageViewNode::ImageViewNode(UniqueIDProvider *idProvider) : Node{idProvider, ty
 void ImageViewNode::calculate()
 {
     auto image = std::any_cast<itk::SmartPointer<ImageType>>(imagePin->payload);
+    if (!image)
+    {
+        return;
+    }
 
     auto size = image->GetLargestPossibleRegion().GetSize();
     width     = size[0];

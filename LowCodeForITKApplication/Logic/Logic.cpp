@@ -34,8 +34,9 @@ void Logic::updateCreators()
     }
 }
 
-void Logic::chainReaction(Pin *outputPin)
+void Logic::chainReaction(Pin *outputPin, bool clear)
 {
+
     outputPin->calculate();
     std::ranges::for_each(outputPin->connectedPins, [&](Pin *inputPin) {
         inputPin->payload = outputPin->payload;
@@ -44,23 +45,36 @@ void Logic::chainReaction(Pin *outputPin)
 
         if (std::ranges::all_of(node->inputPins, [](std::unique_ptr<Pin> &pin) { return pin->payload.has_value(); }))
         {
-            node->calculate();
+            if (!ranges::contains(alreadyRecalculatedNodes, node->id))
+            {
+                node->calculate();
+                alreadyRecalculatedNodes.push_back(node->id);
+            }
 
             if (node->outputPins.size())
             {
                 node->populateOutputPins();
-                std::ranges::for_each(node->outputPins, [&](std::unique_ptr<Pin> &pin) { chainReaction(pin.get()); });
+                std::ranges::for_each(node->outputPins, [&](std::unique_ptr<Pin> &pin) { chainReaction(pin.get(), false); });
             }
         }
     });
+
+    if (clear)
+    {
+        alreadyRecalculatedNodes.clear();
+    }
 }
 
 void Logic::propagateEvaluationThroughTheNodes()
 {
+    bool clear = true;
     auto startChainReaction{[&](const std::unique_ptr<Node> &node) {
         node->calculate();
         node->populateOutputPins();
-        std::ranges::for_each(node->outputPins, [&](std::unique_ptr<Pin> &pin) { chainReaction(pin.get()); });
+        std::ranges::for_each(node->outputPins, [&](std::unique_ptr<Pin> &pin) {
+            chainReaction(pin.get(), clear);
+            clear = false;
+        });
     }};
 
     auto inputNodes = nodes | ranges::views::filter([&](const auto &node) { return isNodeAnInput(node.get()); });

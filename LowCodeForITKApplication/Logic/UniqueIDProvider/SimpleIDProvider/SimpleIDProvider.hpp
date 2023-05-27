@@ -2,13 +2,17 @@
 #include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <ranges>
 #include <stack>
 #include <vector>
-
 class SimpleIDProvider final : public UniqueIDProvider
 {
   public:
+    ~SimpleIDProvider()
+    {
+        std::cout << "asdf";
+    }
     json serialize() override
     {
         json serializedIdProvider;
