@@ -26,8 +26,13 @@
 enum class Functionality
 {
     Filtering,
+    Registration,
+    Segmentation,
+    FeatureExtraction,
     Input,
     Output,
+    Read,
+    Write,
 };
 
 class NodeCreator
@@ -61,8 +66,14 @@ class SpecificNodeCreator : public NodeCreator
     };
 };
 
-inline const std::map<Functionality, std::string> functionalityNameMap{
-    {Functionality::Filtering, "Filtering"}, {Functionality::Input, "Input"}, {Functionality::Output, "Output"}};
+inline const std::map<Functionality, std::string> functionalityNameMap{{Functionality::Filtering, "Filtering"},
+                                                                       {Functionality::Input, "Input"},
+                                                                       {Functionality::Output, "Output"},
+                                                                       {Functionality::Registration, "Registration"},
+                                                                       {Functionality::Segmentation, "Segmentation"},
+                                                                       {Functionality::FeatureExtraction, "FeatureExtraction"},
+                                                                       {Functionality::Read, "Read"},
+                                                                       {Functionality::Write, "Write"}};
 
 template <typename T>
 concept Reflectable = requires() { T::typeName; };
@@ -142,14 +153,14 @@ struct NodesGetter
 inline NodesGetter<Implementation<RGBANode, RGBANodeDrawStrategy, Functionality::Input>,
                    Implementation<ImageViewNode, ImageViewNodeDrawStrategy, Functionality::Output>,
                    Implementation<GaussianBlurNode, GaussianBlurNodeDrawStrategy, Functionality::Filtering>,
-                   Implementation<EdgeDetectionNode, EdgeDetectionNodeDrawStrategy, Functionality::Filtering>,
-                   Implementation<ImageReadNode, ImageReadNodeDrawStrategy, Functionality::Input>,
+                   Implementation<EdgeDetectionNode, EdgeDetectionNodeDrawStrategy, Functionality::FeatureExtraction>,
+                   Implementation<ImageReadNode, ImageReadNodeDrawStrategy, Functionality::Read>,
                    Implementation<FloatingPoinValueNode, FloatingPoinValueNodeDrawStrategy, Functionality::Input>,
                    Implementation<PercentageNode, PercentageNodeDrawStrategy, Functionality::Input>,
                    Implementation<TintNode, TintNodeDrawStrategy, Functionality::Filtering>,
-                   Implementation<ImageSaveNode, ImageSaveNodeDrawStrategy, Functionality::Output>,
-                   Implementation<RegistrationNode, RegistrationNodeDrawStrategy, Functionality::Filtering>,
-                   Implementation<BinaryThresholdNode, BinaryThresholdNodeDrawStrategy, Functionality::Filtering>>
+                   Implementation<ImageSaveNode, ImageSaveNodeDrawStrategy, Functionality::Write>,
+                   Implementation<RegistrationNode, RegistrationNodeDrawStrategy, Functionality::Registration>,
+                   Implementation<BinaryThresholdNode, BinaryThresholdNodeDrawStrategy, Functionality::Segmentation>>
     nodesGetter;
 
 inline auto registeredNodeTypes{nodesGetter.getRegisteredNodeTypeNames()};

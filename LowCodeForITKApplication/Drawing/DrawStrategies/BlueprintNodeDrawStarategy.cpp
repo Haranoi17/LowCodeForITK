@@ -27,9 +27,8 @@ void BlueprintNodeDrawStrategy::draw()
 
     auto nodeHeaderTexture = texturesAccessor->getNodeHeaderTexture();
 
-    nodeBuilder = util::BlueprintNodeBuilder(nodeHeaderTexture,
-                                             texturesOperations->GetTextureWidth(nodeHeaderTexture),
-                                             texturesOperations->GetTextureHeight(nodeHeaderTexture));
+    nodeBuilder = util::BlueprintNodeBuilder(
+        nodeHeaderTexture, texturesOperations->GetTextureWidth(nodeHeaderTexture), texturesOperations->GetTextureHeight(nodeHeaderTexture));
 
     setStyleVariables();
 
@@ -66,11 +65,11 @@ void BlueprintNodeDrawStrategy::setStyleVariables()
     ed::PushStyleColor(ed::StyleColor_PinRectBorder, ImColor(125, 125, 125, 60));
     ed::PushStyleVar(ed::StyleVar_NodePadding, ImVec4(0, 0, 0, 0));
     ed::PushStyleVar(ed::StyleVar_NodeRounding, 5);
-    ed::PushStyleVar(ed::StyleVar_SourceDirection, ImVec2(0.0f, 1.0f));
-    ed::PushStyleVar(ed::StyleVar_TargetDirection, ImVec2(0.0f, -1.0f));
-    ed::PushStyleVar(ed::StyleVar_LinkStrength, 0.0f);
-    ed::PushStyleVar(ed::StyleVar_PinBorderWidth, 1.0f);
-    ed::PushStyleVar(ed::StyleVar_PinRadius, 6.0f);
+    ed::PushStyleVar(ed::StyleVar_SourceDirection, ImVec2(1.0f, 0.0f));
+    ed::PushStyleVar(ed::StyleVar_TargetDirection, ImVec2(-1.0f, 0.0f));
+    ed::PushStyleVar(ed::StyleVar_PinBorderWidth, 4.0f);
+    ed::PushStyleVar(ed::StyleVar_PinRadius, 0.0f);
+    ed::PushStyleVar(ed::StyleVar_LinkStrength, 100.0f);
 }
 
 void BlueprintNodeDrawStrategy::unsetStyleVariables()
@@ -83,10 +82,9 @@ void BlueprintNodeDrawStrategy::unsetStyleVariables()
 void BlueprintNodeDrawStrategy::drawHeader()
 {
     nodeBuilder.Header(getHeaderColor());
-    ImGui::Spring(0);
-    ImGui::TextUnformatted(node->typeName.c_str());
-    ImGui::Spring(1);
-    ImGui::Dummy(ImVec2(0, 28));
+    ImGui::Spring(0.0f);
+    ImGui::Text(node->typeName.c_str());
+    ImGui::Spring(1.0f);
     nodeBuilder.EndHeader();
 }
 
@@ -95,20 +93,15 @@ void BlueprintNodeDrawStrategy::drawInputPins()
     for (const auto &inputPin : node->inputPins)
     {
         auto isConnected = !inputPin->connectedPins.empty();
+
+        ImGui::Spring(0.0f);
+
         nodeBuilder.Input(inputPin->id);
-
-        ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize),
-                          ax::Widgets::IconType::Circle,
-                          isConnected,
-                          g_pinIconColor,
-                          g_pinIconInnerColor);
-
-        ImGui::Spring(0);
-
-        ImGui::TextUnformatted(inputPin->getDrawText().c_str());
-        ImGui::Spring(0);
-
+        ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize), ax::Widgets::IconType::Circle, isConnected, g_pinIconColor, g_pinIconInnerColor);
+        ImGui::Text(inputPin->getDrawText().c_str());
         nodeBuilder.EndInput();
+
+        ImGui::Spring(1.0f);
     }
 }
 
@@ -118,19 +111,14 @@ void BlueprintNodeDrawStrategy::drawOutputPins()
     {
         auto isConnected = !outputPin->connectedPins.empty();
 
+        ImGui::Spring(1.0f);
+
         nodeBuilder.Output(outputPin->id);
-
-        ImGui::Spring(0);
-        ImGui::TextUnformatted(outputPin->getDrawText().c_str());
-        ImGui::Spring(0);
-
-        ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize),
-                          ax::Widgets::IconType::Circle,
-                          isConnected,
-                          g_pinIconColor,
-                          g_pinIconInnerColor);
-
+        ImGui::Text(outputPin->getDrawText().c_str());
+        ax::Widgets::Icon(ImVec2(g_pinIconSize, g_pinIconSize), ax::Widgets::IconType::Circle, isConnected, g_pinIconColor, g_pinIconInnerColor);
         nodeBuilder.EndOutput();
+
+        ImGui::Spring(0.0f);
     }
 }
 
@@ -155,10 +143,14 @@ void BlueprintNodeDrawStrategy::setDeserializedPositionInEditior()
 
 ImColor BlueprintNodeDrawStrategy::getHeaderColor()
 {
-    static std ::map<Functionality, ImColor> functionalityColorMap{
-        {Functionality::Filtering, ImColor{0.0f, 1.0f, 0.0f}},
-        {Functionality::Input, ImColor{0.0f, 0.0f, 1.0f}},
-        {Functionality::Output, ImColor{1.0f, 0.0f, 0.0f}}};
+    static std ::map<Functionality, ImColor> functionalityColorMap{{Functionality::Filtering, ImColor{0.0f, 1.0f, 0.0f}},
+                                                                   {Functionality::Input, ImColor{0.0f, 1.0f, 0.8f}},
+                                                                   {Functionality::FeatureExtraction, ImColor{0.8f, 0.8f, 0.5f}},
+                                                                   {Functionality::Registration, ImColor{0.3f, 0.6f, 0.8f}},
+                                                                   {Functionality::Segmentation, ImColor{0.3f, 0.3f, 0.0f}},
+                                                                   {Functionality::Write, ImColor{1.0f, 0.5f, 0.0f}},
+                                                                   {Functionality::Read, ImColor{0.0f, 0.3f, 0.7f}},
+                                                                   {Functionality::Output, ImColor{1.0f, 0.0f, 0.0f}}};
 
     auto nodeFunctionality = nodeTypeFunctionalityMap.at(node->typeName);
     return functionalityColorMap.at(nodeFunctionality);
