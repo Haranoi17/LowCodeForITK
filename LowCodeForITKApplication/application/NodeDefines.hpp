@@ -47,6 +47,8 @@ class NodeCreator
 template <typename NodeType>
 class SpecificNodeCreator : public NodeCreator
 {
+    inline static std::unique_ptr<SimpleIDProvider> mockIdProvider{std::make_unique<SimpleIDProvider>()};
+
   public:
     ~SpecificNodeCreator() = default;
     std::unique_ptr<Node> createFullyFunctional(UniqueIDProvider *idProvider) override
@@ -61,8 +63,7 @@ class SpecificNodeCreator : public NodeCreator
 
     std::unique_ptr<Node> createMocked() override
     {
-        SimpleIDProvider mockIdProvider;
-        return std::make_unique<NodeType>(&mockIdProvider);
+        return std::make_unique<NodeType>(mockIdProvider.get());
     };
 };
 

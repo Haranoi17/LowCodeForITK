@@ -9,10 +9,8 @@
 class SimpleIDProvider final : public UniqueIDProvider
 {
   public:
-    ~SimpleIDProvider()
-    {
-        std::cout << "asdf";
-    }
+    ~SimpleIDProvider() = default;
+
     json serialize() override
     {
         json serializedIdProvider;
