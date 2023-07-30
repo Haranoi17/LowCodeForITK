@@ -13,21 +13,13 @@ class Node;
 class Pin : public Serializable
 {
   public:
-    Pin(UniqueIDProvider *idProvider, Node *parentNode, std::optional<std::string_view> contextName,
-        std::string_view typeName = "anyValue")
-        : idProvider{idProvider}, id{idProvider->generateID()}, parentNode{parentNode},
-          contextName{contextName}, typeName{typeName.data()}
+    Pin(UniqueIDProvider *idProvider, Node *parentNode, std::optional<std::string_view> contextName, std::string_view typeName = "anyValue")
+        : idProvider{idProvider}, id{idProvider->generateID()}, parentNode{parentNode}, contextName{contextName}, typeName{typeName.data()}
     {
     }
 
     Pin() = default;
-    ~Pin()
-    {
-        if (idProvider)
-        {
-            idProvider->freeID(id);
-        }
-    }
+    ~Pin();
 
     virtual void calculate();
 

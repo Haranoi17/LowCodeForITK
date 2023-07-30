@@ -338,16 +338,21 @@ void LowCodeForITKApplication::handleDeleting()
     if (ed::BeginDelete())
     {
         linksDeletion();
-        ed::NodeId deletedNodeId;
-        while (ed::QueryDeletedNode(&deletedNodeId))
-        {
-            if (ed::AcceptDeletedItem())
-            {
-                logic.deleteNode(deletedNodeId.Get());
-            }
-        }
+        nodeDeletion();
     }
     ed::EndDelete();
+}
+
+void LowCodeForITKApplication::nodeDeletion()
+{
+    ed::NodeId deletedNodeId;
+    while (ed::QueryDeletedNode(&deletedNodeId))
+    {
+        if (ed::AcceptDeletedItem())
+        {
+            logic.deleteNode(deletedNodeId.Get());
+        }
+    }
 }
 
 void LowCodeForITKApplication::linksDeletion()

@@ -1,19 +1,26 @@
 #include "Link.hpp"
 
-LinkInfo::LinkInfo(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins)
-    : idProvider{idProvider}, id{idProvider->generateID()}, pinIds{pins}
+Link::Link(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins) : idProvider{idProvider}, id{idProvider->generateID()}, pinIds{pins}
 {
 }
 
-json LinkInfo::serialize()
+Link::~Link()
 {
-    json serializedLinkInfo;
-    serializedLinkInfo["id"]     = id;
-    serializedLinkInfo["pinIds"] = pinIds;
-    return serializedLinkInfo;
+    if (idProvider)
+    {
+        idProvider->freeID(id);
+    }
 }
 
-void LinkInfo::deserialize(json data)
+json Link::serialize()
+{
+    json serializedLink;
+    serializedLink["id"]     = id;
+    serializedLink["pinIds"] = pinIds;
+    return serializedLink;
+}
+
+void Link::deserialize(json data)
 {
     id     = data["id"];
     pinIds = data["pinIds"];

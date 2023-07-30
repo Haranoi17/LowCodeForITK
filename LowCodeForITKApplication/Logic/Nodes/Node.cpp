@@ -2,6 +2,14 @@
 #include <Logic/Pins/DefinedPins/DefinedPins.hpp>
 #include <algorithm>
 
+Node::~Node()
+{
+    if (idProvider)
+    {
+        idProvider->freeID(id);
+    }
+}
+
 void Node::calculate()
 {
     dirty = true;
@@ -31,8 +39,7 @@ json Node::serialize()
     serializedNode["posY"] = position.y;
 
     std::ranges::for_each(inputPins, [&](const auto &pin) { serializedNode["inputPins"].push_back(pin->serialize()); });
-    std::ranges::for_each(outputPins,
-                          [&](const auto &pin) { serializedNode["outputPins"].push_back(pin->serialize()); });
+    std::ranges::for_each(outputPins, [&](const auto &pin) { serializedNode["outputPins"].push_back(pin->serialize()); });
 
     return serializedNode;
 }

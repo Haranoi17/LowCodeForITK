@@ -100,7 +100,7 @@ void Logic::createLink(std::pair<IDType, IDType> pinIdPair)
     auto firstPin{getPinById(pinIdPair.first)};
     auto secondPin{getPinById(pinIdPair.second)};
 
-    links.emplace_back(std::make_unique<LinkInfo>(idProvider.get(), pinIdPair));
+    links.emplace_back(std::make_unique<Link>(idProvider.get(), pinIdPair));
 
     firstPin->connectedPins.emplace_back(secondPin);
     secondPin->connectedPins.emplace_back(firstPin);
@@ -138,9 +138,9 @@ void Logic::removeDirtyFlagsFromNodes()
 
 void Logic::deleteLink(IDType linkId)
 {
-    auto linkInfo  = getLinkInfoById(linkId);
-    auto firstPin  = getPinById(linkInfo->pinIds.first);
-    auto secondPin = getPinById(linkInfo->pinIds.second);
+    auto link      = getLinkById(linkId);
+    auto firstPin  = getPinById(link->pinIds.first);
+    auto secondPin = getPinById(link->pinIds.second);
 
     auto [removeBeginForFirst, removeEndForFirst] = std::ranges::remove_if(
         firstPin->connectedPins, [&secondPin](const Pin *connectedPinToFirst) { return connectedPinToFirst->id == secondPin->id; });
@@ -152,7 +152,7 @@ void Logic::deleteLink(IDType linkId)
 
     secondPin->connectedPins.erase(removeBeginForSecond, removeEndForSecond);
 
-    auto [removeBeginForLink, removeEndForLink] = std::ranges::remove(links, linkId, &LinkInfo::id);
+    auto [removeBeginForLink, removeEndForLink] = std::ranges::remove(links, linkId, &Link::id);
 
     links.erase(removeBeginForLink, removeEndForLink);
 }
@@ -161,10 +161,10 @@ void Logic::deleteNode(IDType nodeId)
 {
     auto nodePins = getPinsOnNode(getNodeById(nodeId));
 
-    auto                    toPinLinks = [this](const Pin *pin) { return getPinLinks(pin); };
-    std::vector<LinkInfo *> nodeLinks  = nodePins | ranges::views::transform(toPinLinks) | ranges::actions::join | ranges::to_vector;
+    auto                toPinLinks = [this](const Pin *pin) { return getPinLinks(pin); };
+    std::vector<Link *> nodeLinks  = nodePins | ranges::views::transform(toPinLinks) | ranges::actions::join | ranges::to_vector;
 
-    ranges::for_each(nodeLinks, [&](LinkInfo *linkInfo) { deleteLink(linkInfo->id); });
+    ranges::for_each(nodeLinks, [&](Link *link) { deleteLink(link->id); });
 
     auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] = std::ranges::remove(nodeDrawStrategies, nodeId, &NodeDrawStrategy::nodeToDrawID);
     nodeDrawStrategies.erase(beginRemoveDrawStrategy, endRemoveDrawStrategy);
@@ -178,7 +178,7 @@ std::vector<NodeDrawStrategy *> Logic::getNodesDrawStrategies() const
     return nodeDrawStrategies | std::views::transform(ToNonOwningPointer()) | ranges::to_vector;
 }
 
-std::vector<LinkInfo *> Logic::getLinks() const
+std::vector<Link *> Logic::getLinks() const
 {
     return links | std::views::transform(ToNonOwningPointer()) | ranges::to_vector;
 }
@@ -229,7 +229,7 @@ void Logic::deserializeLinks(json serializedLinks)
 {
     for (auto link : serializedLinks)
     {
-        auto linkObject = std::make_unique<LinkInfo>();
+        auto linkObject = std::make_unique<Link>();
         linkObject->deserialize(link);
 
         links.emplace_back(std::move(linkObject));
@@ -292,11 +292,10 @@ Node *Logic::getNodeById(IDType nodeId) const
     return ranges::find_if(nodes, hasGivenId)->get();
 }
 
-std::vector<LinkInfo *> Logic::getPinLinks(const Pin *pin) const
+std::vector<Link *> Logic::getPinLinks(const Pin *pin) const
 {
-    return links | ranges::views::transform(ToNonOwningPointer()) | ranges::views::filter([pin](const LinkInfo *linkInfo) {
-               return pin->id == linkInfo->pinIds.first || pin->id == linkInfo->pinIds.second;
-           }) |
+    return links | ranges::views::transform(ToNonOwningPointer()) |
+           ranges::views::filter([pin](const Link *link) { return pin->id == link->pinIds.first || pin->id == link->pinIds.second; }) |
            ranges::to_vector;
 }
 
@@ -340,9 +339,9 @@ void Logic::clearAll()
     idProvider.reset();
 }
 
-const LinkInfo *Logic::getLinkInfoById(IDType linkId) const
+const Link *Logic::getLinkById(IDType linkId) const
 {
-    auto hasGivenId    = [linkId](const auto &linkInfo) { return linkInfo->id == linkId; };
+    auto hasGivenId    = [linkId](const auto &link) { return link->id == linkId; };
     auto linksPointers = links | ranges::views::transform(ToNonOwningPointer()) | ranges::to_vector;
     return *ranges::find_if(linksPointers, hasGivenId);
 }

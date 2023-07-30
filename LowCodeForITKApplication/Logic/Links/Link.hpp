@@ -4,19 +4,13 @@
 #include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 #include <utility>
 
-class LinkInfo : public Serializable
+class Link : public Serializable
 {
   public:
-    LinkInfo(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins);
-    LinkInfo() = default;
+    Link(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins);
+    Link() = default;
 
-    ~LinkInfo()
-    {
-        if (idProvider)
-        {
-            idProvider->freeID(id);
-        }
-    }
+    ~Link();
 
     json serialize() override;
     void deserialize(json data) override;

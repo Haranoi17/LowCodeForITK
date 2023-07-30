@@ -1,5 +1,13 @@
 #include "Logic/Pins/Pin.hpp"
 
+Pin::~Pin()
+{
+    if (idProvider)
+    {
+        idProvider->freeID(id);
+    }
+}
+
 void Pin::calculate()
 {
 }

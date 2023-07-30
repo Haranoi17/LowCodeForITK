@@ -12,7 +12,7 @@
 #include "Logic/Nodes/Node.hpp"
 #include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
 
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 struct NodeWithDrawStrategy
 {
@@ -45,7 +45,7 @@ class Logic : public Serializable
     void removeDirtyFlagsFromNodes();
 
     std::vector<NodeDrawStrategy *> getNodesDrawStrategies() const;
-    std::vector<LinkInfo *>         getLinks() const;
+    std::vector<Link *>             getLinks() const;
     std::vector<Node *>             getNodes() const;
 
     std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> nodeCreators;
@@ -67,9 +67,9 @@ class Logic : public Serializable
 
     void updatePinsAfterDeserialization();
 
-    std::vector<LinkInfo *> getPinLinks(const Pin *pin) const;
-    Pin                    *getPinById(IDType id) const;
-    Node                   *getNodeById(IDType id) const;
+    std::vector<Link *> getPinLinks(const Pin *pin) const;
+    Pin                *getPinById(IDType id) const;
+    Node               *getNodeById(IDType id) const;
 
     bool isNodeAnInput(const Node *node) const;
     bool arePinsOnSameNode(const Pin *first, const Pin *second) const;
@@ -79,14 +79,14 @@ class Logic : public Serializable
     std::vector<Pin *> getPinsOnNode(const Node *node) const;
 
     bool                         isInputPin(const Pin *pin) const;
-    const LinkInfo              *getLinkInfoById(IDType linkId) const;
+    const Link                  *getLinkById(IDType linkId) const;
     const std::unique_ptr<Node> &getNodeWithPin(IDType pinId) const;
 
     void cleanNonInputNodesPins();
 
     void clearAll();
 
-    std::vector<std::unique_ptr<LinkInfo>>         links;
+    std::vector<std::unique_ptr<Link>>             links;
     std::vector<std::unique_ptr<Node>>             nodes;
     std::vector<std::unique_ptr<NodeDrawStrategy>> nodeDrawStrategies;
     std::unique_ptr<UniqueIDProvider>              idProvider;
