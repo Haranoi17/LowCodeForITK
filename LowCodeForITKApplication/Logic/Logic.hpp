@@ -86,8 +86,8 @@ class Logic : public Serializable
 
     void clearAll();
 
+    std::unique_ptr<UniqueIDProvider>              idProvider;
     std::vector<std::unique_ptr<Link>>             links;
     std::vector<std::unique_ptr<Node>>             nodes;
     std::vector<std::unique_ptr<NodeDrawStrategy>> nodeDrawStrategies;
-    std::unique_ptr<UniqueIDProvider>              idProvider;
 };
