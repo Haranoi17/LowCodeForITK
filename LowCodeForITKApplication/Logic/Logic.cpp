@@ -14,24 +14,9 @@
 #include "UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp"
 
 #include "Logic/utilities.hpp"
-#include "application/NodeDefines.hpp"
 
-Logic::Logic() : idProvider{std::make_unique<SimpleIDProvider>()}
+Logic::Logic(NodesDefinitions *nodesDefinitions) : idProvider{std::make_unique<SimpleIDProvider>()}, nodesDefinitions{nodesDefinitions}
 {
-}
-
-void Logic::updateCreators()
-{
-    for (const auto nodeType : registeredNodeTypes)
-    {
-        nodeCreators[nodeType] = [&, nodeType]() {
-            auto nodeCreator         = nodeTypeNameToCreatorMap.at(nodeType).get();
-            auto drawStrategyCreator = nodeTypeNameToDrawStrategyCreatorMap.at(nodeType);
-            auto node                = nodeCreator->createFullyFunctional(idProvider.get());
-            auto drawStrategy        = drawStrategyCreator(node.get());
-            return std::make_unique<NodeWithDrawStrategy>(std::move(node), std::move(drawStrategy));
-        };
-    }
 }
 
 void Logic::chainReaction(Pin *outputPin, bool clear)
@@ -116,11 +101,6 @@ void Logic::addNode(std::unique_ptr<Node> newNode)
     nodes.emplace_back(std::move(newNode));
 }
 
-void Logic::addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy)
-{
-    nodeDrawStrategies.push_back(std::move(nodeDrawStrategy));
-}
-
 std::string Logic::getPinType(IDType pinId)
 {
     return getPinById(pinId)->typeName;
@@ -166,16 +146,8 @@ void Logic::deleteNode(IDType nodeId)
 
     ranges::for_each(nodeLinks, [&](Link *link) { deleteLink(link->id); });
 
-    auto [beginRemoveDrawStrategy, endRemoveDrawStrategy] = std::ranges::remove(nodeDrawStrategies, nodeId, &NodeDrawStrategy::nodeToDrawID);
-    nodeDrawStrategies.erase(beginRemoveDrawStrategy, endRemoveDrawStrategy);
-
     auto [beginRemoveNodes, endRemoveNodes] = std::ranges::remove(nodes, nodeId, &Node::id);
     nodes.erase(beginRemoveNodes, endRemoveNodes);
-}
-
-std::vector<NodeDrawStrategy *> Logic::getNodesDrawStrategies() const
-{
-    return nodeDrawStrategies | std::views::transform(ToNonOwningPointer()) | ranges::to_vector;
 }
 
 std::vector<Link *> Logic::getLinks() const
@@ -210,6 +182,11 @@ void Logic::deserialize(json data)
     idProvider->deserialize(data["idProvider"]);
 }
 
+Node *Logic::getLastAddedNode()
+{
+    return nodes.back().get();
+}
+
 json Logic::serializeLinks()
 {
     json serializedLinks;
@@ -241,13 +218,10 @@ void Logic::deserializeNodes(json serializedNodes)
     for (auto nodeData : serializedNodes)
     {
         std::string nodeTypeName = nodeData["name"];
-        auto        node         = nodeTypeNameToCreatorMap.at(nodeTypeName)->createForDeserialization();
+        auto        node         = nodesDefinitions->getMapOfNodeCreators().at(nodeTypeName)->createForDeserialization();
         node->deserialize(nodeData);
 
-        auto drawStrategy = nodeTypeNameToDrawStrategyCreatorMap.at(nodeTypeName)(node.get());
-
         addNode(std::move(node));
-        addNodeDrawStrategy(std::move(drawStrategy));
     }
 }
 
@@ -335,7 +309,6 @@ void Logic::clearAll()
 {
     links.clear();
     nodes.clear();
-    nodeDrawStrategies.clear();
     idProvider.reset();
 }
 

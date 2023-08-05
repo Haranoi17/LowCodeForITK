@@ -7,25 +7,18 @@
 #include <utility>
 #include <vector>
 
-#include "Drawing/DrawStrategies/NodeDrawStrategy.hpp"
 #include "Logic/Links/Link.hpp"
 #include "Logic/Nodes/Node.hpp"
+#include "Logic/NodesRepository.hpp"
 #include "Logic/UniqueIDProvider/UniqueIDProvider.hpp"
+#include <Logic/NodeCreator.hpp>
 
 #include <nlohmann/json.hpp>
-
-struct NodeWithDrawStrategy
-{
-    std::unique_ptr<Node>             node;
-    std::unique_ptr<NodeDrawStrategy> drawStrategy;
-};
 
 class Logic : public Serializable
 {
   public:
-    Logic();
-
-    void updateCreators();
+    Logic(NodesDefinitions *nodesDefinitions);
 
     void propagateEvaluationThroughTheNodes();
     void chainReaction(Pin *outputPin, bool clear = true);
@@ -37,22 +30,25 @@ class Logic : public Serializable
 
     bool isInputPin(IDType pinId);
     void addNode(std::unique_ptr<Node> newNode);
-    void addNodeDrawStrategy(std::unique_ptr<NodeDrawStrategy> nodeDrawStrategy);
 
     std::string getPinType(IDType pinId);
 
     bool innerNodesStateChanged() const;
     void removeDirtyFlagsFromNodes();
 
-    std::vector<NodeDrawStrategy *> getNodesDrawStrategies() const;
-    std::vector<Link *>             getLinks() const;
-    std::vector<Node *>             getNodes() const;
-
-    std::map<std::string, std::function<std::unique_ptr<NodeWithDrawStrategy>()>> nodeCreators;
+    std::vector<Link *> getLinks() const;
+    std::vector<Node *> getNodes() const;
 
     json serialize() override;
 
     void deserialize(json data) override;
+
+    Node *getLastAddedNode();
+
+    UniqueIDProvider *getIdProvider()
+    {
+        return idProvider.get();
+    };
 
   private:
     std::vector<IDType> alreadyRecalculatedNodes{};
@@ -86,8 +82,8 @@ class Logic : public Serializable
 
     void clearAll();
 
-    std::unique_ptr<UniqueIDProvider>              idProvider;
-    std::vector<std::unique_ptr<Link>>             links;
-    std::vector<std::unique_ptr<Node>>             nodes;
-    std::vector<std::unique_ptr<NodeDrawStrategy>> nodeDrawStrategies;
+    std::unique_ptr<UniqueIDProvider>  idProvider;
+    std::vector<std::unique_ptr<Link>> links;
+    std::vector<std::unique_ptr<Node>> nodes;
+    NodesDefinitions                  *nodesDefinitions;
 };

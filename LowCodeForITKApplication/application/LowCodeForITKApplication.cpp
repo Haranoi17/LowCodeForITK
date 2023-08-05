@@ -1,7 +1,5 @@
 #include "LowCodeForITKApplication.hpp"
 #include "Logic/Interfaces/Identifiable.hpp"
-#include "NodeDefines.hpp"
-#include "TexturesOperationsProxySingleton.hpp"
 #include <algorithm>
 #include <fstream>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -34,7 +32,7 @@ void LowCodeForITKApplication::deserialize(std::string_view fileName)
         {
             fstream >> json;
             logic.deserialize(json);
-            logic.updateCreators();
+            ranges::for_each(logic.getNodes(), [this](auto node) { registerDrawStrategyForNode(node); });
             logic.propagateEvaluationThroughTheNodes();
             fstream.close();
         }
@@ -47,26 +45,16 @@ void LowCodeForITKApplication::deserialize(std::string_view fileName)
 
 void LowCodeForITKApplication::OnStart()
 {
-    logic.updateCreators();
-
     config.SettingsFile = settingsFile;
 
     context = ed::CreateEditor(&config);
 
-    TexturesOperationsProxySingleton::instance(this);
+    texturesRepository->loadTextures(textureOperator.get());
 }
 
 void LowCodeForITKApplication::OnStop()
 {
     ed::DestroyEditor(context);
-}
-
-void LowCodeForITKApplication::buttonForTriggeringEvaluation()
-{
-    if (ImGui::Button("TriggerEvaluationButton", ImVec2{200, 40}))
-    {
-        logic.propagateEvaluationThroughTheNodes();
-    }
 }
 
 void LowCodeForITKApplication::drawMenu()
@@ -94,14 +82,7 @@ void LowCodeForITKApplication::SubMenuFile()
 
         if (ImGui::MenuItem("save"))
         {
-            if (currentProjectFileName.empty())
-            {
-                inputFileName = true;
-            }
-            else
-            {
-                serialize(currentProjectFileName);
-            }
+            serialize(currentProjectFileName);
         }
 
         if (ImGui::MenuItem("save as"))
@@ -121,16 +102,17 @@ void LowCodeForITKApplication::SubMenuNodes()
         {
             if (ImGui::BeginMenu(functionalityName.c_str()))
             {
-                for (const auto [nodeType, createNodeWithDrawStrategy] : logic.nodeCreators)
+                for (const auto nodeType : nodesRepository.getRegisteredNodeTypeNames())
                 {
-                    if (nodeTypeFunctionalityMap.at(nodeType) != functionality)
+                    if (nodesRepository.getMapOfNodeFunctionalities().at(nodeType) != functionality)
                     {
                         continue;
                     }
 
                     if (ImGui::MenuItem(nodeType.c_str()))
                     {
-                        addNode(createNodeWithDrawStrategy());
+                        auto newNode = nodesRepository.getMapOfNodeCreators().at(nodeType)->createFullyFunctional(logic.getIdProvider());
+                        addNode(std::move(newNode));
                     }
                 }
                 ImGui::EndMenu();
@@ -142,7 +124,7 @@ void LowCodeForITKApplication::SubMenuNodes()
 
 void LowCodeForITKApplication::OnFrame(float deltaTime)
 {
-    TexturesOperationsProxySingleton::instance()->DestroyTextures();
+    // TexturesOperationsProxySingleton::instance()->DestroyTextures();
 
     ed::SetCurrentEditor(context);
     ed::Begin("Editor", ImVec2(0.0, 0.0f));
@@ -156,7 +138,7 @@ void LowCodeForITKApplication::OnFrame(float deltaTime)
     pinsVisualLinking();
     nodesPopup();
 
-    std::ranges::for_each(logic.getNodesDrawStrategies(), [&](NodeDrawStrategy *nodeDrawStrategy) { nodeDrawStrategy->draw(); });
+    std::ranges::for_each(logic.getNodes(), [&](Node *node) { drawNode(node->id); });
 
     if (logic.innerNodesStateChanged() && logicFinished)
     {
@@ -276,7 +258,7 @@ void LowCodeForITKApplication::nodesPopup()
             {
                 auto isDragPinInput       = logic.isInputPin(dragPinID.value());
                 auto dragPinType          = logic.getPinType(dragPinID.value());
-                auto nonOwningMockedNodes = mockedNodes | std::views::transform(ToNonOwningPointer());
+                auto nonOwningMockedNodes = nodesRepository.getMockedNodes() | std::views::transform(ToNonOwningPointer());
                 auto compatibleNodes      = nonOwningMockedNodes | ranges::view::filter([&](const Node *node) {
                                            const auto &pinsToCheck = isDragPinInput ? node->outputPins : node->inputPins;
                                            return ranges::contains(pinsToCheck, dragPinType, &Pin::typeName);
@@ -285,10 +267,10 @@ void LowCodeForITKApplication::nodesPopup()
 
                 for (const auto [functionality, functionalityName] : functionalityNameMap)
                 {
-                    auto nodesWithCurrentFunctionality =
-                        compatibleNodes |
-                        ranges::views::filter([&](const Node *node) { return nodeTypeFunctionalityMap.at(node->typeName) == functionality; }) |
-                        ranges::to_vector;
+                    auto nodesWithCurrentFunctionality = compatibleNodes | ranges::views::filter([&](const Node *node) {
+                                                             return nodesRepository.getMapOfNodeFunctionalities().at(node->typeName) == functionality;
+                                                         }) |
+                                                         ranges::to_vector;
 
                     if (const auto shouldEnableMenu = !nodesWithCurrentFunctionality.empty();
                         ImGui::BeginMenu(functionalityName.c_str(), shouldEnableMenu))
@@ -299,10 +281,9 @@ void LowCodeForITKApplication::nodesPopup()
 
                             if (ImGui::MenuItem(nodeType.c_str()))
                             {
-                                auto nodeWithDrawStrategy = logic.nodeCreators.at(nodeType)();
+                                auto newNode = nodesRepository.getMapOfNodeCreators().at(nodeType)->createFullyFunctional(logic.getIdProvider());
 
-                                const auto &pinsToIterate =
-                                    isDragPinInput ? nodeWithDrawStrategy->node->outputPins : nodeWithDrawStrategy->node->inputPins;
+                                const auto &pinsToIterate = isDragPinInput ? newNode->outputPins : newNode->inputPins;
 
                                 std::vector<std::pair<IDType, std::string>> pairs =
                                     pinsToIterate |
@@ -313,7 +294,7 @@ void LowCodeForITKApplication::nodesPopup()
 
                                 auto otherID = result->first;
 
-                                addNode(std::move(nodeWithDrawStrategy));
+                                addNode(std::move(newNode));
                                 auto pinIdsPair = std::make_pair(otherID, dragPinID.value());
                                 if (logic.isLinkPossible(pinIdsPair))
                                 {
@@ -350,6 +331,7 @@ void LowCodeForITKApplication::nodeDeletion()
     {
         if (ed::AcceptDeletedItem())
         {
+            unregisterDrawStrategyForNode(deletedNodeId.Get());
             logic.deleteNode(deletedNodeId.Get());
         }
     }
@@ -376,17 +358,33 @@ void LowCodeForITKApplication::showFPS()
 
 void LowCodeForITKApplication::drawingLinks()
 {
-    for (auto &linkInfo : logic.getLinks())
-        ed::Link(linkInfo->id, linkInfo->pinIds.first, linkInfo->pinIds.second);
+    for (auto &link : logic.getLinks())
+        ed::Link(link->id, link->pinIds.first, link->pinIds.second);
 }
 
-void LowCodeForITKApplication::addNode(std::unique_ptr<NodeWithDrawStrategy> nodeWithDrawStrategy)
+void LowCodeForITKApplication::addNode(std::unique_ptr<Node> newNode)
 {
     auto mpos = mousePosAtNodesPopupOpened.value_or(ImGui::GetIO().MousePos);
-    ed::SetNodePosition(nodeWithDrawStrategy->node->id, ed::ScreenToCanvas(mpos));
+    ed::SetNodePosition(newNode->id, ed::ScreenToCanvas(mpos));
 
-    logic.addNode(std::move(nodeWithDrawStrategy->node));
-    logic.addNodeDrawStrategy(std::move(nodeWithDrawStrategy->drawStrategy));
+    logic.addNode(std::move(newNode));
+    registerDrawStrategyForNode(logic.getLastAddedNode());
+}
+
+void LowCodeForITKApplication::registerDrawStrategyForNode(Node *node)
+{
+    drawStrategies[node->id] =
+        nodesRepository.getMapOfDrawStrategyCreators().at(node->typeName)(node, textureOperator.get(), texturesRepository.get(), &colorPicker);
+}
+
+void LowCodeForITKApplication::unregisterDrawStrategyForNode(IDType nodeID)
+{
+    drawStrategies.erase(nodeID);
+}
+
+void LowCodeForITKApplication::drawNode(IDType nodeId)
+{
+    drawStrategies[nodeId]->draw();
 }
 
 void LowCodeForITKApplication::pinsVisualLinking()

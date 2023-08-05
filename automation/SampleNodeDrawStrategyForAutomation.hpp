@@ -1,12 +1,12 @@
-#include "Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
-#include "Logic/Nodes/SampleNodeForAutomation/SampleNodeForAutomation.hpp"
+#pragma once
 
-#include "Application/TexturesOperationsProxySingleton.hpp"
+#include "Application/Drawing/DrawStrategies/BlueprintNodeDrawStarategy.hpp"
+#include "Logic/Nodes/SampleNodeForAutomation/SampleNodeForAutomation.hpp"
 
 struct SampleNodeDrawStrategyForAutomation : public BlueprintNodeDrawStrategy
 {
-    SampleNodeDrawStrategyForAutomation(SampleNodeForAutomation *SampleNodeForAutomationParam);
+  using BlueprintNodeDrawStrategy::BlueprintNodeDrawStrategy;
 
   private:
-    SampleNodeForAutomation *SampleNodeForAutomationParam;
+    SampleNodeForAutomation *SampleNodeForAutomationParam{dynamic_cast<SampleNodeForAutomation *>(node)};
 };

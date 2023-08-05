@@ -13,7 +13,7 @@ replace_values = {
 logic_sample_files = ["SampleNodeForAutomation.cpp", "SampleNodeForAutomation.hpp"]
 draw_sample_files = ["SampleNodeDrawStrategyForAutomation.cpp", "SampleNodeDrawStrategyForAutomation.hpp"]
 logic_file_dir = f"../LowCodeForITKApplication/Logic/Nodes/{node_name}"
-draw_strategy_dir = f"../LowCodeForITKApplication/Drawing/DrawStrategies/{node_draw_strategy_name}"
+draw_strategy_dir = f"../LowCodeForITKApplication/Application/Drawing/DrawStrategies/{node_draw_strategy_name}"
 
 def doMagic(output_dir, sample_files, replacements, append_to_file_name=""):
     for sample_file_name in sample_files:
