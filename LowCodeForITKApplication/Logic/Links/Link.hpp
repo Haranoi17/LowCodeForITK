@@ -8,6 +8,7 @@ class Link : public Serializable
 {
   public:
     Link(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins);
+    Link(UniqueIDProvider *idProvider);
     Link() = default;
 
     ~Link();

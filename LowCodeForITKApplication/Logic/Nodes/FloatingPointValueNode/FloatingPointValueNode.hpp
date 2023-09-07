@@ -13,7 +13,6 @@ class FloatingPointValueNode : public Node
 
     inline static std::string typeName = "FloatingPoinValueNode";
     FloatingPointValueNode(UniqueIDProvider *idProvider);
-    FloatingPointValueNode() = default;
 
     void populateOutputPins() override;
 

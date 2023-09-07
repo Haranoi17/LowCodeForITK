@@ -19,9 +19,10 @@ ${ITK_LIBRARIES}
 target_include_directories(${TargetName} PRIVATE 
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/../externals/imgui-filebrowser/
-
 )
 
 if(MSVC)
 target_link_options(${TargetName} PRIVATE /ENTRY:WinMainCRTStartup)
 endif()
+
+

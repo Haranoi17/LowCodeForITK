@@ -17,5 +17,4 @@ struct ImageReadNodeDrawStrategy : public BlueprintNodeDrawStrategy
     ImageReadNode *imageViewNode{dynamic_cast<ImageReadNode *>(node)};
 
     ImGui::FileBrowser filebrowser;
-    std::string        previousPath;
 };

@@ -3,8 +3,6 @@ project( LowCodeForITK )
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/LowCodeForITKApplication)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/utils.cmake)
-
 find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 

@@ -16,7 +16,6 @@ class Node : public Serializable, public Positionable
         : idProvider{idProvider}, id{idProvider->generateID()}, typeName{typeName}
     {
     }
-    Node() = default;
     ~Node();
 
     virtual void calculate();
@@ -39,3 +38,7 @@ class Node : public Serializable, public Positionable
     Position                          position{};
     std::vector<std::unique_ptr<Pin>> deserializePins(json pinsData);
 };
+
+
+template<typename T>
+concept NodeDerived = std::derived_from<T, Node>;

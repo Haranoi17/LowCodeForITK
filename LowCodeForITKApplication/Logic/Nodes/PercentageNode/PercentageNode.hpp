@@ -10,7 +10,6 @@ class PercentageNode : public Node
   public:
     inline static std::string typeName = "PercentageNode";
 
-    PercentageNode() = default;
     PercentageNode(UniqueIDProvider *idProvider, std::string_view name = typeName);
 
     void populateOutputPins() override;

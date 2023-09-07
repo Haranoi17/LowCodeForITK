@@ -36,3 +36,6 @@ class Pin : public Serializable
     std::optional<std::string> contextName;
     std::any                   payload;
 };
+
+template <typename T>
+concept PinDerived = std::derived_from<T, Pin>;

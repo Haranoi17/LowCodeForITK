@@ -13,7 +13,6 @@ class EdgeDetectionNode : public Node
 
     inline static std::string typeName = "EdgeDetectionNode";
     EdgeDetectionNode(UniqueIDProvider *idProvider);
-    EdgeDetectionNode() = default;
 
     void calculate() override;
     void populateOutputPins() override;

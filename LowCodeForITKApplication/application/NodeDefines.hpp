@@ -34,17 +34,8 @@
 
 #include <concepts>
 
-template <typename T>
-concept Reflectable = requires() { T::typeName; };
 
-template <typename T>
-concept NodeImplementation = requires() {
-                                 requires Reflectable<typename T::NodeType>;
-                                 T::DrawStrategyType;
-                                 T::functionality;
-                             };
-
-template <Reflectable NodeTypeParam, typename DrawStrategyTypeParam, Functionality functionalityParam>
+template <NodeDerived NodeTypeParam, typename DrawStrategyTypeParam, Functionality functionalityParam>
 struct Implementation
 {
     using NodeType         = NodeTypeParam;
@@ -54,6 +45,13 @@ struct Implementation
 };
 
 using DrawStrategyCreator = std::function<std::unique_ptr<NodeDrawStrategy>(Node *, TextureOperator *, TexturesRepository *, ColorPicker *)>;
+
+template <typename T>
+concept NodeImplementation = requires() {
+                                 T::NodeType;
+                                 T::DrawStrategyType;
+                                 T::functionality;
+                             };
 
 template <NodeImplementation... Implementations>
 struct NodesRepositoryVariadic : public NodesDefinitions

@@ -80,9 +80,12 @@ void LowCodeForITKApplication::SubMenuFile()
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("save"))
+        if (!currentProjectFileName.empty()) 
         {
-            serialize(currentProjectFileName);
+            if (ImGui::MenuItem("save"))
+            {
+                serialize(currentProjectFileName);
+            }
         }
 
         if (ImGui::MenuItem("save as"))
@@ -213,6 +216,7 @@ void LowCodeForITKApplication::SaveNewFileForm()
         if (ImGui::Button("save"))
         {
             serialize(newFileName + projectFileExtention);
+            currentProjectFileName = newFileName;
             clean();
         }
 
@@ -368,7 +372,7 @@ void LowCodeForITKApplication::addNode(std::unique_ptr<Node> newNode)
     ed::SetNodePosition(newNode->id, ed::ScreenToCanvas(mpos));
 
     logic.addNode(std::move(newNode));
-    registerDrawStrategyForNode(logic.getLastAddedNode());
+    registerDrawStrategyForNode(logic.getLastAddedNode()); 
 }
 
 void LowCodeForITKApplication::registerDrawStrategyForNode(Node *node)

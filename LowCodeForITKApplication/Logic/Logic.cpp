@@ -173,13 +173,14 @@ json Logic::serialize()
 void Logic::deserialize(json data)
 {
     clearAll();
+
+    idProvider = std::make_unique<SimpleIDProvider>();
+    idProvider->deserialize(data["idProvider"]);
+
     deserializeNodes(data["nodes"]);
     deserializeLinks(data["links"]);
 
     updatePinsAfterDeserialization();
-
-    idProvider = std::make_unique<SimpleIDProvider>();
-    idProvider->deserialize(data["idProvider"]);
 }
 
 Node *Logic::getLastAddedNode()
@@ -206,7 +207,7 @@ void Logic::deserializeLinks(json serializedLinks)
 {
     for (auto link : serializedLinks)
     {
-        auto linkObject = std::make_unique<Link>();
+        auto linkObject = std::make_unique<Link>(getIdProvider());
         linkObject->deserialize(link);
 
         links.emplace_back(std::move(linkObject));
@@ -218,7 +219,7 @@ void Logic::deserializeNodes(json serializedNodes)
     for (auto nodeData : serializedNodes)
     {
         std::string nodeTypeName = nodeData["name"];
-        auto        node         = nodesDefinitions->getMapOfNodeCreators().at(nodeTypeName)->createForDeserialization();
+        auto        node         = nodesDefinitions->getMapOfNodeCreators().at(nodeTypeName)->createFullyFunctional(getIdProvider());
         node->deserialize(nodeData);
 
         addNode(std::move(node));

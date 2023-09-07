@@ -13,7 +13,6 @@ class BinaryThresholdNode : public Node
 
     inline static std::string typeName = "BinaryThresholdNode";
     BinaryThresholdNode(UniqueIDProvider *idProvider);
-    BinaryThresholdNode() = default;
 
     void calculate() override;
     void populateOutputPins() override;

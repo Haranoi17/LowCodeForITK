@@ -15,8 +15,10 @@
 #include <itkComposeImageFilter.h>
 #include <itkImageFileWriter.h>
 
+#include <itkCastImageFilter.h>
 #include <itkImageDuplicator.h>
-
+#include <itkRGBToLuminanceImageAdaptor.h>
+#include <itkScalarToRGBPixelFunctor.h>
 #include <limits>
 
 EdgeDetectionNode::EdgeDetectionNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}

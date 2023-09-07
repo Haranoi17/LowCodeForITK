@@ -10,3 +10,9 @@ class ToNonOwningPointer
         return ptr.get();
     }
 };
+
+template<typename EnumClass>
+std::underlying_type_t<EnumClass> to_underlying(EnumClass enumValue)
+{
+    return static_cast<std::underlying_type_t<EnumClass>>(enumValue);
+}

@@ -13,7 +13,6 @@ class ImageReadNode : public Node
 
     inline static std::string typeName = "ImageReadNode";
     ImageReadNode(UniqueIDProvider *idProvider);
-    ImageReadNode() = default;
 
     void populateOutputPins() override;
 

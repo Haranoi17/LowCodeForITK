@@ -15,7 +15,6 @@ class ImageViewNode : public Node
 
     inline static std::string typeName = "ImageViewNode";
     ImageViewNode(UniqueIDProvider *idProvider);
-    ImageViewNode() = default;
 
     void calculate() override;
 

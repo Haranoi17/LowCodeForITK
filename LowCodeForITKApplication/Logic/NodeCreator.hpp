@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <Logic/Nodes/Node.hpp>
 #include <Logic/UniqueIDProvider/SimpleIDProvider/SimpleIDProvider.hpp>
@@ -9,7 +9,6 @@ class NodeCreator
   public:
     virtual ~NodeCreator()                                                            = default;
     virtual std::unique_ptr<Node> createFullyFunctional(UniqueIDProvider *idProvider) = 0;
-    virtual std::unique_ptr<Node> createForDeserialization()                          = 0;
     virtual std::unique_ptr<Node> createMocked()                                      = 0;
 };
 
@@ -23,11 +22,6 @@ class SpecificNodeCreator : public NodeCreator
     std::unique_ptr<Node> createFullyFunctional(UniqueIDProvider *idProvider) override
     {
         return std::make_unique<NodeType>(idProvider);
-    };
-
-    std::unique_ptr<Node> createForDeserialization() override
-    {
-        return std::make_unique<NodeType>();
     };
 
     std::unique_ptr<Node> createMocked() override

@@ -14,7 +14,6 @@ class TintNode : public Node
 
     inline static std::string typeName = "TintNode";
 
-    TintNode() = default;
     TintNode(UniqueIDProvider *idProvider, std::string_view name = typeName);
 
     void calculate() override;

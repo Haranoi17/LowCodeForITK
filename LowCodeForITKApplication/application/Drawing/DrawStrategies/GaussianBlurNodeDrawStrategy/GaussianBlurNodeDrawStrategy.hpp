@@ -10,3 +10,4 @@ struct GaussianBlurNodeDrawStrategy : public BlueprintNodeDrawStrategy
   private:
     GaussianBlurNode *gaussianBlurNode{dynamic_cast<GaussianBlurNode *>(node)};
 };
+

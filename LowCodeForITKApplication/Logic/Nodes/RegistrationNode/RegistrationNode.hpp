@@ -43,7 +43,6 @@ class RegistrationNode : public Node
 
     inline static std::string typeName = "RegistrationNode";
     RegistrationNode(UniqueIDProvider *idProvider);
-    RegistrationNode() = default;
 
     void calculate() override;
     void populateOutputPins() override;

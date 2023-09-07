@@ -5,6 +5,8 @@
 #include <itkImageRegionIterator.h>
 #include <itkSmoothingRecursiveGaussianImageFilter.h>
 
+#include "Logic/utilities.hpp"
+
 GaussianBlurNode::GaussianBlurNode(UniqueIDProvider *idProvider) : Node{idProvider, typeName}
 {
     inputPins.emplace_back(std::make_unique<ImagePin>(idProvider, this));
@@ -27,21 +29,14 @@ void GaussianBlurNode::calculate()
         return;
     }
 
-    ImageType::RegionType region = image->GetBufferedRegion();
+    using GaussianFunctionType = itk::SmoothingRecursiveGaussianImageFilter<ImageType, ImageType>;
+    GaussianFunctionType::Pointer gaussianFunction = GaussianFunctionType::New();
 
-    ImageType::Pointer output = ImageType::New();
-
-    output->SetRegions(region);
-    output->SetOrigin(image->GetOrigin());
-    output->SetSpacing(image->GetSpacing());
-    output->Allocate();
-
-    using GFunctionType                     = itk::SmoothingRecursiveGaussianImageFilter<ImageType, ImageType>;
-    GFunctionType::Pointer gaussianFunction = GFunctionType::New();
     gaussianFunction->SetInput(image);
-
     gaussianFunction->SetSigma(sigma);
+
     gaussianFunction->Update();
+
     outputImage = gaussianFunction->GetOutput();
 }
 
@@ -54,7 +49,8 @@ void GaussianBlurNode::deserialize(json data)
 {
     Node::deserialize(data);
 
-    inputImagePin  = inputPins.at(0).get();
-    sigmaPin       = inputPins.at(1).get();
-    outputImagePin = outputPins.at(0).get();
+    inputImagePin = inputPins.at(to_underlying(InputPinIndex::imagePin)).get();
+    sigmaPin      = inputPins.at(to_underlying(InputPinIndex::sigmaPin)).get();
+
+    outputImagePin = outputPins.at(to_underlying(OutputPinIndex::imagePin)).get();
 }

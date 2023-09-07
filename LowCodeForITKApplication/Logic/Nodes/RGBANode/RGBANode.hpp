@@ -12,7 +12,6 @@ class RGBANode : public Node
 
     inline static std::string typeName = "RGBANode";
 
-    RGBANode() = default;
     RGBANode(UniqueIDProvider *idProvider);
 
     void populateOutputPins() override;

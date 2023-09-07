@@ -1,5 +1,11 @@
 #include "Link.hpp"
 
+
+
+Link::Link(UniqueIDProvider *idProvider) : Link{idProvider, {}}
+{
+}
+
 Link::Link(UniqueIDProvider *idProvider, std::pair<IDType, IDType> pins) : idProvider{idProvider}, id{idProvider->generateID()}, pinIds{pins}
 {
 }

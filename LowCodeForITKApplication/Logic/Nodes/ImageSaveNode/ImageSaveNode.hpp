@@ -12,8 +12,8 @@ class ImageSaveNode : public Node
     using ImageType = itk::Image<PixelType, 2>;
 
     inline static std::string typeName = "ImageSaveNode";
+
     ImageSaveNode(UniqueIDProvider *idProvider);
-    ImageSaveNode() = default;
 
     void calculate() override;
 
