@@ -28,4 +28,5 @@ struct BlueprintNodeDrawStrategy : public NodeDrawStrategy
 
     ax::NodeEditor::Utilities::BlueprintNodeBuilder nodeBuilder;
     ColorPicker                                    *colorPicker;
+    std::optional<Position>                         creationPosition;
 };

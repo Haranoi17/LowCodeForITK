@@ -369,7 +369,8 @@ void LowCodeForITKApplication::drawingLinks()
 void LowCodeForITKApplication::addNode(std::unique_ptr<Node> newNode)
 {
     auto mpos = mousePosAtNodesPopupOpened.value_or(ImGui::GetIO().MousePos);
-    ed::SetNodePosition(newNode->id, ed::ScreenToCanvas(mpos));
+    auto canvasPos = ed::ScreenToCanvas(mpos);
+    newNode->setPosition(Position{canvasPos.x, canvasPos.y});
 
     logic.addNode(std::move(newNode));
     registerDrawStrategyForNode(logic.getLastAddedNode()); 

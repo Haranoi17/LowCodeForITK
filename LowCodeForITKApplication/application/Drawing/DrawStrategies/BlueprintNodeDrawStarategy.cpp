@@ -19,6 +19,7 @@ BlueprintNodeDrawStrategy::BlueprintNodeDrawStrategy(Node *node, TextureOperator
     : NodeDrawStrategy{node, textureOperator, textureRepository}, colorPicker{colorPicker}
 {
     setDeserializedPositionInEditior();
+    creationPosition = node->getPosition();
 }
 
 void BlueprintNodeDrawStrategy::draw()
@@ -146,6 +147,12 @@ ImColor BlueprintNodeDrawStrategy::getHeaderColor()
 
 void BlueprintNodeDrawStrategy::synchronizeLogicalNodePositionToEditor()
 {
+    if (creationPosition)
+    {
+        ed::SetNodePosition(node->id, ImVec2{creationPosition.value().x, creationPosition.value().y});
+        creationPosition = std::nullopt;
+    }
+
     auto positionInEditor = ed::GetNodePosition(node->id);
     node->setPosition(Position{positionInEditor.x, positionInEditor.y});
 }
